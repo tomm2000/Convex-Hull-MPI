@@ -4,6 +4,7 @@ g++ randompoints.cpp -o randompoints && ./randompoints
 
 #include <iostream>
 #include <fstream>
+#include <math.h>
 using namespace std;
 
 // #define TIMING
@@ -32,8 +33,13 @@ int main(int argc, char *argv[]) {
 
   // write the points
   for (int i = 0; i < NPOINTS; i++) {
-    int x = rand() % (2 * RADIUS) - RADIUS;
-    int y = rand() % (2 * RADIUS) - RADIUS;
+    // generate points uniformly distributed in a circle
+    double angle = (double) rand() / RAND_MAX * 2 * 3.14159265359;
+    double r = sqrt((double) rand() / RAND_MAX) * RADIUS;
+
+    int x = r * cos(angle);
+    int y = r * sin(angle);
+
     file.write((char*)&x, sizeof(int));
     file.write((char*)&y, sizeof(int));
   }

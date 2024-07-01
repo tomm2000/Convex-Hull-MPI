@@ -306,15 +306,15 @@ int main(int argc, char *argv[]) {
   hull.push_back(right);
   hull.push_back(left);
 
-  // MPI_Barrier(MPI_COMM_WORLD);
-  // cout << "===================== <process " << rank << "> Starting QuickHull" << endl;
-
   QuickHull(PointType, numP, rank, upperHalf, left, right, hull, 0);
   QuickHull(PointType, numP, rank, lowerHalf, right, left, hull, 0);
 
   if (rank == 0) {
     cout << "Hull size: " << hull.size() << endl;
-    savePointsToFile(hull, "hull.txt");
+
+    if (hull.size() < 1000) {
+      savePointsToFile(hull, "hull.txt");
+    }
   }
 
   // Terminate MPI
