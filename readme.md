@@ -1,12 +1,12 @@
-
-to generate the points: \
-- `mpicxx -o randompoints randompoints.cxx` (compile only once)
-- `mpirun -n 4 ./randompoints` \
+to generate random points: \
+- `g++ randompoints.cpp -o randompoints.out` (compile only once)
+- `./randompoints.out [#points=100]` \
 or
-- `mpicxx -o randompoints randompoints.cxx && mpirun -n 4 ./randompoints`
+- `g++ randompoints.cpp -o randompoints.out && ./randompoints.out [#points=100]`
 
 to run the algorithm: \
-- `g++ randompoints.cpp -o randompoints` (compile only once)
-- `./randompoints` \
+- `mpicxx -o QuickHullMPI.out QuickHullMPI.cxx` (compile only once)
+- `mpirun -n 4 ./QuickHullMPI.out` \
 or
-- `g++ randompoints.cpp -o randompoints && ./randompoints`
+- `mpicxx -o QuickHullMPI.out QuickHullMPI.cxx && mpirun -n 4 ./QuickHullMPI.out`
+

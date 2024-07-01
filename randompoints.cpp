@@ -12,12 +12,16 @@ using namespace std;
 #define RADIUS 100
 
 int main(int argc, char *argv[]) {
+  // if there are 2 arguments, the first one is the number of points
+  int NPOINTS = 1000;
+  if (argc == 2) {
+    NPOINTS = atoi(argv[1]);
+  }
+
   clock_t start_time, end_time;
   double elapsed_time;
 
   start_time = clock(); 
-
-  const int NPOINTS = 10000000;
 
   // create a file to write the points
   ofstream file;
@@ -38,7 +42,7 @@ int main(int argc, char *argv[]) {
 
   end_time = clock();
   elapsed_time = (end_time - start_time) / (double) CLOCKS_PER_SEC;
-  cout << "Time to generate the points: " << elapsed_time * 1000 << "ms" << endl;
+  cout << "Time to generate " << NPOINTS << " points: " << elapsed_time * 1000.0 << "ms" << endl;
 
   return 0;
 }
