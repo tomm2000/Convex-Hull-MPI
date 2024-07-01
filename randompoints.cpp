@@ -1,5 +1,5 @@
 /*
-mpicxx -o randompoints randompoints.cxx && mpirun -n 4 ./randompoints
+g++ randompoints.cpp -o randompoints && ./randompoints
 */
 
 #include <iostream>

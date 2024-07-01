@@ -1,8 +1,5 @@
 /*
-> mpicxx -o CHmpi CHmpi.cxx
-> mpirun -n 4 ./CHmpi
-
-> mpicxx -o CHmpi CHmpi.cxx | mpirun -n 4 ./CHmpi
+> mpicxx -o CHmpi CHmpi.cxx && mpirun -n 4 ./CHmpi
 */
 
 #include "mpi.h"
