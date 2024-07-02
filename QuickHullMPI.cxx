@@ -1,5 +1,5 @@
 /*
-> mpicxx -o QuickHullMPI QuickHullMPI.cxx && mpirun -n 4 ./QuickHullMPI
+> mpicxx -o QuickHullMPI.out QuickHullMPI.cxx && mpirun -n 4 ./QuickHullMPI.out
 */
 
 #include "mpi.h"
@@ -151,21 +151,25 @@ int main(int argc, char *argv[]) {
   // the file starts with an integer that represents the number of points
   int numPoints;
   MPI_File_read(fh, &numPoints, 1, MPI_INT, MPI_STATUS_IGNORE);
-  numPoints /= 2;
 
   #ifdef DEBUG
-  cout << "<process " << rank << "> Number of points: " << numPoints << endl;
+  cout << "<process " << rank << "> Number of points total: " << numPoints << endl;
   #endif
 
   int pointsPerProcess = ceil(numPoints / numP);
   int start = rank * pointsPerProcess;
   int end = min(start + pointsPerProcess, numPoints);
+  if (rank == numP - 1) { end = numPoints; }
   pointsPerProcess = end - start;
 
   Point *points = new Point[pointsPerProcess];
   MPI_File_read_at(fh, sizeof(int) + start * 2 * sizeof(int), points, pointsPerProcess, PointType, MPI_STATUS_IGNORE);
 
   MPI_File_close(&fh);
+
+  #ifdef DEBUG
+  cout << "<process " << rank << "> Points read: " << pointsPerProcess << endl;
+  #endif
 
   #ifdef TIMING
   clock_t end_time = clock();
@@ -207,43 +211,22 @@ int main(int argc, char *argv[]) {
   cout << "<process " << rank << "> Local left: " << left.toString() << ", right: " << right.toString() << endl;
   #endif
 
-  if (rank == 0) {
-    for (int i = 1; i < numP; i++) {
-      Point tmpLeft, tmpRight;
+  // find the global extreme points
+  Point *left_candidates = new Point[numP];
+  Point *right_candidates = new Point[numP];
 
-      MPI_Recv(&tmpLeft, 1, PointType, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      MPI_Recv(&tmpRight, 1, PointType, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  MPI_Allgather(&left, 1, PointType, left_candidates, 1, PointType, MPI_COMM_WORLD);
+  MPI_Allgather(&right, 1, PointType, right_candidates, 1, PointType, MPI_COMM_WORLD);
 
-      if (tmpLeft.x < left.x) {
-        left = tmpLeft;
-      }
-
-      if (tmpRight.x > right.x) {
-        right = tmpRight;
-      }
+  for (int i = 0; i < numP; i++) {
+    if (left_candidates[i].x < left.x) {
+      left = left_candidates[i];
     }
 
-    #ifdef DEBUG
-    cout << "<process " << rank << "> received all local extreme points" << endl;
-    #endif
-
-    // send the extreme points to all processes
-    MPI_Bcast(&left, 1, PointType, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&right, 1, PointType, 0, MPI_COMM_WORLD);
-  } else {
-    // send the local extreme points to the root process
-    MPI_Send(&left, 1, PointType, 0, 0, MPI_COMM_WORLD);
-    MPI_Send(&right, 1, PointType, 0, 0, MPI_COMM_WORLD);
-
-    #ifdef DEBUG
-    cout << "<process " << rank << "> Sent local left: " << left.toString() << ", right: " << right.toString() << endl;
-    #endif
-
-    // receive the extreme points from the root process
-    MPI_Bcast(&left, 1, PointType, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&right, 1, PointType, 0, MPI_COMM_WORLD);
+    if (right_candidates[i].x > right.x) {
+      right = right_candidates[i];
+    }
   }
-
 
   #ifdef TIMING
   end_time = clock();
@@ -344,23 +327,17 @@ void QuickHull(
   #endif
 
   int pointsLeft = points.size();
+  int *pointsLeftPerProcess = new int[numP];
 
   #ifdef DEBUG
   cout << "<process " << rank << " - " << iteration << ">, local points left: " << pointsLeft << endl;
   #endif
 
-  if (rank == 0) {
-    for (int i = 1; i < numP; i++) {
-      int tmpPointsLeft;
-      MPI_Recv(&tmpPointsLeft, 1, MPI_INT, i, msg_tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  MPI_Allgather(&pointsLeft, 1, MPI_INT, pointsLeftPerProcess, 1, MPI_INT, MPI_COMM_WORLD);
 
-      pointsLeft += tmpPointsLeft;
-    }
-
-    MPI_Bcast(&pointsLeft, 1, MPI_INT, 0, MPI_COMM_WORLD);
-  } else {
-    MPI_Send(&pointsLeft, 1, MPI_INT, 0, msg_tag, MPI_COMM_WORLD);
-    MPI_Bcast(&pointsLeft, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  pointsLeft = 0;
+  for (int i = 0; i < numP; i++) {
+    pointsLeft += pointsLeftPerProcess[i];
   }
 
   #ifdef DEBUG
@@ -386,7 +363,7 @@ void QuickHull(
   #ifdef TIMING
   start_time = clock();
   #endif
-
+  
   float maxDistance = -1;
   Point maxPoint = Point();
 
@@ -401,46 +378,31 @@ void QuickHull(
     }
   }
 
+  bool valid = maxDistance > 0;
+
   #ifdef DEBUG
   cout << "<process " << rank << " - " << iteration << ">, local max point: " << maxPoint.toString() << endl;
   #endif
 
-  // send the max point to the root process
-  if (rank == 0) {
-    for (int i = 1; i < numP; i++) {
-      Point tmpMaxPoint;
-      MPI_Status status;
-      MPI_Recv(&tmpMaxPoint, 1, PointType, i, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+  Point *maxPoints = new Point[numP];
+  bool *validPoints = new bool[numP];
 
-      if (status.MPI_TAG == empty_points) { continue; }
+  MPI_Allgather(&valid, 1, MPI_C_BOOL, validPoints, 1, MPI_C_BOOL, MPI_COMM_WORLD);
+  MPI_Allgather(&maxPoint, 1, PointType, maxPoints, 1, PointType, MPI_COMM_WORLD);
 
-      float tmpDistance = lineDistanceCalculator.distanceFromLine(tmpMaxPoint);
+  maxDistance = -1;
+  maxPoint = Point();
 
-      if (tmpDistance > maxDistance) {
-        maxDistance = tmpDistance;
-        maxPoint = tmpMaxPoint;
-      }
-    }
-  } else {
-    // if no points are found, send an empty point
-    if (points.size() == 0) {
-      Point emptyPoint = Point();
-      MPI_Send(&emptyPoint, 1, PointType, 0, empty_points, MPI_COMM_WORLD);
-      
-      #ifdef DEBUG
-      cout << "<process " << rank << " - " << iteration << ">, sent empty point" << endl;
-      #endif
-    } else {
-      MPI_Send(&maxPoint, 1, PointType, 0, msg_tag, MPI_COMM_WORLD);
+  for (int i = 0; i < numP; i++) {
+    if (!validPoints[i]) { continue; }
 
-      #ifdef DEBUG
-      cout << "<process " << rank << " - " << iteration << ">, sent local max point" << endl;
-      #endif
+    float tmpDistance = lineDistanceCalculator.distanceFromLine(maxPoints[i]);
+
+    if (tmpDistance > maxDistance) {
+      maxDistance = tmpDistance;
+      maxPoint = maxPoints[i];
     }
   }
-
-  // share the max point with all processes
-  MPI_Bcast(&maxPoint, 1, PointType, 0, MPI_COMM_WORLD);
 
   // add the max point to the hull
   hull.push_back(maxPoint);

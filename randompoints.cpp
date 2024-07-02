@@ -10,7 +10,7 @@ using namespace std;
 // #define TIMING
 // #define DEBUG
 
-#define RADIUS 100
+#define RADIUS 200
 
 int main(int argc, char *argv[]) {
   // if there are 2 arguments, the first one is the number of points
@@ -30,6 +30,8 @@ int main(int argc, char *argv[]) {
 
   // write the number of points
   file.write((char*)&NPOINTS, sizeof(int));
+
+  srand(time(NULL));
 
   // write the points
   for (int i = 0; i < NPOINTS; i++) {
