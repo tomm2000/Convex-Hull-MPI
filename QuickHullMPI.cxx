@@ -178,20 +178,20 @@ int main(int argc, char *argv[]) {
     cout << "<process " << rank << "> Time to read points: " << elapsed * 1000.0 << "ms" << endl;
   }
   #endif
-  //================================================================
-  #pragma endregion
 
   glob_end_time = clock();
   glob_elapsed_time = ((double) (glob_end_time - glob_start_time)) / CLOCKS_PER_SEC;
 
   if (rank == 0) {
-    cout << "Read time: " << glob_elapsed_time * 1000.0 << "ms" << endl;
+    cout << "Init time: " << glob_elapsed_time * 1000.0 << "ms" << endl;
   }
-
-  glob_start_time = clock();
+  //================================================================
+  #pragma endregion
 
   #pragma region 2. extremes
   //================= 2. Find the 2 extreme points =================
+  glob_start_time = clock();
+
   #ifdef TIMING
   start_time = clock();
   #endif
@@ -211,20 +211,26 @@ int main(int argc, char *argv[]) {
   cout << "<process " << rank << "> Local left: " << left.toString() << ", right: " << right.toString() << endl;
   #endif
 
-  // find the global extreme points
-  Point *left_candidates = new Point[numP];
-  Point *right_candidates = new Point[numP];
+  Point *leftPoints = new Point[numP];
+  Point *rightPoints = new Point[numP];
 
-  MPI_Allgather(&left, 1, PointType, left_candidates, 1, PointType, MPI_COMM_WORLD);
-  MPI_Allgather(&right, 1, PointType, right_candidates, 1, PointType, MPI_COMM_WORLD);
+  MPI_Allgather(&left, 1, PointType, leftPoints, 1, PointType, MPI_COMM_WORLD);
+  MPI_Allgather(&right, 1, PointType, rightPoints, 1, PointType, MPI_COMM_WORLD);
 
-  for (int i = 0; i < numP; i++) {
-    if (left_candidates[i].x < left.x) {
-      left = left_candidates[i];
+  left = leftPoints[0];
+  right = rightPoints[0];
+
+  for (int i = 1; i < numP; i++) {
+    if (leftPoints[i].x < left.x) {
+      left = leftPoints[i];
+    } else if (leftPoints[i].x == left.x && leftPoints[i].y < left.y) {
+      left = leftPoints[i];
     }
 
-    if (right_candidates[i].x > right.x) {
-      right = right_candidates[i];
+    if (rightPoints[i].x > right.x) {
+      right = rightPoints[i];
+    } else if (rightPoints[i].x == right.x && rightPoints[i].y > right.y) {
+      right = rightPoints[i];
     }
   }
 
@@ -270,6 +276,9 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  // FIXME: is this free necessary?
+  free(points);
+
   #ifdef DEBUG
   cout << "<process " << rank << "> Upper half: " << upperHalf.size() << ", lower half: " << lowerHalf.size() << endl;
   #endif
@@ -284,6 +293,8 @@ int main(int argc, char *argv[]) {
   //================================================================
   #pragma endregion
 
+  #pragma region 4. Recursion
+  //================= 4. Recurse on the two halves =================
   vector<Point> hull;
 
   hull.push_back(right);
@@ -299,6 +310,8 @@ int main(int argc, char *argv[]) {
       savePointsToFile(hull, "hull.txt");
     }
   }
+  //================================================================
+  #pragma endregion
 
   // Terminate MPI
   MPI_Finalize();
@@ -501,7 +514,7 @@ void QuickHull(
   //================================================================
   #pragma endregion
 
-  #pragma region 4. Recursion
+  #pragma region 5. Recursion
   //================= 4. Recurse on the two halves =================
   QuickHull(PointType, numP, rank, upperHalf, a, maxPoint, hull, iteration + 1);
   QuickHull(PointType, numP, rank, lowerHalf, maxPoint, b, hull, iteration + 1);
