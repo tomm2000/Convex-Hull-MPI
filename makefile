@@ -2,10 +2,10 @@
 MPICXX = mpicxx
 
 # Compiler flags
-CXXFLAGS = -Wall -O2
+CXXFLAGS = -Wall -O3
 
-# Target executable
-TARGET = quickhull_mpi
+# Target object file
+TARGET = quickhull_mpi.o
 
 # Source files
 SRCS = QuickHullMPI.cxx QuickHullDistributed.cxx QuickHullSequential.cxx lib.cxx
@@ -16,9 +16,9 @@ OBJS = $(SRCS:.cxx=.o)
 # Default target
 all: $(TARGET)
 
-# Linking
+# Linking (now creates an object file instead of an executable)
 $(TARGET): $(OBJS)
-	$(MPICXX) $(CXXFLAGS) -o $@ $^
+	$(MPICXX) -r -o $@ $^
 
 # Compilation
 %.o: %.cxx
