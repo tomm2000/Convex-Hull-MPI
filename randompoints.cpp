@@ -43,16 +43,25 @@ int main(int argc, char *argv[]) {
   srand(seed);
 
   // write the points
-  for (int i = 0; i < NPOINTS; i++) {
-    // generate points uniformly distributed in a circle
-    double angle = (double) rand() / RAND_MAX * 2 * 3.14159265359;
-    double r = sqrt((double) rand() / RAND_MAX) * RADIUS;
+  const int BUFFER_SIZE = 100;
+  int buffer[BUFFER_SIZE * 2];
 
-    int x = r * cos(angle);
-    int y = r * sin(angle);
+  for (int i = 0; i < NPOINTS; i += BUFFER_SIZE) {
+    int pointsToWrite = min(BUFFER_SIZE, NPOINTS - i);
 
-    file.write((char*)&x, sizeof(int));
-    file.write((char*)&y, sizeof(int));
+    for (int j = 0; j < pointsToWrite; j++) {
+      // generate points uniformly distributed in a circle
+      double angle = (double) rand() / RAND_MAX * 2 * 3.14159265359;
+      double r = sqrt((double) rand() / RAND_MAX) * RADIUS;
+
+      int x = r * cos(angle);
+      int y = r * sin(angle);
+
+      buffer[j * 2] = x;
+      buffer[j * 2 + 1] = y;
+    }
+
+    file.write((char*)buffer, sizeof(int) * pointsToWrite * 2);
   }
 
   file.close();
