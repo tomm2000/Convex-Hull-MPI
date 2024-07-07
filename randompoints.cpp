@@ -10,7 +10,7 @@ using namespace std;
 // #define TIMING
 // #define DEBUG
 
-#define RADIUS 200
+#define RADIUS 1000000
 
 int main(int argc, char *argv[]) {
   // if there are 2 arguments, the first one is the number of points

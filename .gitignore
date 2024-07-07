@@ -2,3 +2,6 @@
 *.txt
 *.out
 *.exe
+
+# ignore all files in build directory
+build/

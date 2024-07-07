@@ -201,12 +201,23 @@ int main(int argc, char *argv[]) {
   vector<Point> pointsLeft  = QuickHullDistributed(PointType, numP, rank, upperHalf, left, right, hull, 0);
   vector<Point> _pointsLeft = QuickHullDistributed(PointType, numP, rank, lowerHalf, right, left, hull, 0);
 
+    // Comleted distributed quickhull
+    // cout << "Completed distributed quickhull" << endl;
+    cout << "<process " << rank << "> Points left: " << pointsLeft.size() << endl;
+
+    // Running sequential quickhull with {} points
+    cout << "<process " << rank << "> Running sequential quickhull with " << pointsLeft.size() << " points" << endl;
+
+  MPI_Barrier(MPI_COMM_WORLD);
+
   pointsLeft.insert(pointsLeft.end(), _pointsLeft.begin(), _pointsLeft.end());
   int NpointsLeft = pointsLeft.size();
 
   // gather points left
   if (rank == 0) {
     for (int i = 1; i < numP; i++) {
+      cout << "Receiving points from process " << i << endl;
+
       int pointsLeftProcess;
       MPI_Recv(&pointsLeftProcess, 1, MPI_INT, i, msg_tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 

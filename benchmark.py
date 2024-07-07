@@ -4,16 +4,21 @@ import os
 from time import sleep
 
 startfrom = 0
-numpoints_values = [500_000_000]
+numpoints_values = [100_000_000]
 numtasks_values = [36]
-n_nodes = 4
+n_nodes = 1
 num_tries = 5
 
-result = subprocess.run(["srun", "-N", "1", "g++", "randompoints.cpp", "-o", "randompoints.out", "-O3"], stdout=subprocess.PIPE)
-print(f"Compiled randompoints.out")
+# clean the build directory
+result = subprocess.run(["make", "clean"], stdout=subprocess.PIPE)
 
-result = subprocess.run(["srun", "-N", "1", "mpicxx", "QuickHullMPI.cxx", "-o", "QuickHullMPI.out", "-O3"], stdout=subprocess.PIPE)
-print(f"Compiled QuickHullMPI.out")
+# srun -N 1 g++ randompoints.cpp -o build/randompoints -O3
+result = subprocess.run(["srun", "-N", "1", "g++", "randompoints.cpp", "-o", "build/randompoints", "-O3"], stdout=subprocess.PIPE)
+print(f"Compiled randompoints")
+
+# run make file instead
+result = subprocess.run(["make"], stdout=subprocess.PIPE)
+print(f"Compiled QuickHullMPI")
 
 
 for num_tasks in numtasks_values:
@@ -28,14 +33,14 @@ for num_tasks in numtasks_values:
       total_read_time = 0
 
       for i in range(num_tries):
-        result = subprocess.run(["srun", "-N", "1", "randompoints.out", str(numpoints)], stdout=subprocess.PIPE)
+        result = subprocess.run(["srun", "-N", "1", "build/randompoints", str(numpoints)], stdout=subprocess.PIPE)
         print()
         print(result.stdout)
 
         print("-------------------------------------")
         print(f"Running QuickHullMPI with {numpoints} points and {num_tasks}*{n_nodes} tasks")
 
-        result = subprocess.run(["srun", "--mpi=pmix", "--nodes", str(n_nodes), "--ntasks", str(num_tasks * n_nodes), "--ntasks-per-node", str(num_tasks), "QuickHullMPI.out"], stdout=subprocess.PIPE)
+        result = subprocess.run(["srun", "--mpi=pmix", "--nodes", str(n_nodes), "--ntasks", str(num_tasks * n_nodes), "--ntasks-per-node", str(num_tasks), "build/QuickHullMPI"], stdout=subprocess.PIPE)
 
         # extract the elapsed time
         elapsed_time = re.search(r"Elapsed time: (\d+\.\d+)ms", result.stdout.decode())

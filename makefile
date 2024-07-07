@@ -1,32 +1,42 @@
 # Compiler
-MPICXX = mpicxx
+CXX = mpicxx
 
 # Compiler flags
-CXXFLAGS = -Wall -O3
+CXXFLAGS = -O3
 
-# Target object file
-TARGET = quickhull_mpi.o
+# Directories
+SRCDIR = .
+BUILDDIR = build
 
 # Source files
-SRCS = QuickHullMPI.cxx QuickHullDistributed.cxx QuickHullSequential.cxx lib.cxx
+SOURCES = $(wildcard $(SRCDIR)/*.cxx)
 
 # Object files
-OBJS = $(SRCS:.cxx=.o)
+OBJECTS = $(patsubst $(SRCDIR)/%.cxx,$(BUILDDIR)/%.o,$(SOURCES))
+
+# Executable name
+EXECUTABLE = $(BUILDDIR)/QuickHullMPI
 
 # Default target
-all: $(TARGET)
+all: $(BUILDDIR) $(EXECUTABLE)
 
-# Linking (now creates an object file instead of an executable)
-$(TARGET): $(OBJS)
-	$(MPICXX) -r -o $@ $^
+# Rule to create build directory
+$(BUILDDIR):
+	mkdir -p $(BUILDDIR)
 
-# Compilation
-%.o: %.cxx
-	$(MPICXX) $(CXXFLAGS) -c $< -o $@
+# Rule to create the executable
+$(EXECUTABLE): $(OBJECTS)
+	srun -N 1 $(CXX) $(CXXFLAGS) $(OBJECTS) -o $@
+	chmod +x $@
 
-# Clean
+# Rule to compile source files to object files
+$(BUILDDIR)/%.o: $(SRCDIR)/%.cxx
+	srun -N 1 $(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Clean target
 clean:
-	rm -f $(TARGET) $(OBJS)
+	rm -f $(BUILDDIR)/*.o $(BUILDDIR)/QuickHullMPI
+	
 
 # Phony targets
 .PHONY: all clean
