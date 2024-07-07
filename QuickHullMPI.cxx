@@ -456,6 +456,7 @@ void QuickHull(
     }
   }
 
+  // free(points.data());
   points = newPoints;
 
   #ifdef DEBUG

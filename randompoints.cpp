@@ -19,6 +19,15 @@ int main(int argc, char *argv[]) {
     NPOINTS = atoi(argv[1]);
   }
 
+  int seed = 0;
+
+  if (argc == 3) {
+    NPOINTS = atoi(argv[1]);
+    seed = atoi(argv[2]);
+  } else {
+    seed = time(NULL);
+  }
+
   clock_t start_time, end_time;
   double elapsed_time;
 
@@ -31,7 +40,7 @@ int main(int argc, char *argv[]) {
   // write the number of points
   file.write((char*)&NPOINTS, sizeof(int));
 
-  srand(time(NULL));
+  srand(seed);
 
   // write the points
   for (int i = 0; i < NPOINTS; i++) {
@@ -50,7 +59,9 @@ int main(int argc, char *argv[]) {
 
   end_time = clock();
   elapsed_time = (end_time - start_time) / (double) CLOCKS_PER_SEC;
-  cout << "Time to generate " << NPOINTS << " points: " << elapsed_time * 1000.0 << "ms" << endl;
+  
+  // Time to generate {} points: {}ms, seed: {}
+  cout << "Time to generate " << NPOINTS << " points: " << elapsed_time * 1000 << "ms, seed: " << seed << endl;
 
   return 0;
 }
