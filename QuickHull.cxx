@@ -1,9 +1,9 @@
-#include "QuickHullSequential.hxx"
+#include "QuickHull.hxx"
 
 using namespace std;
 
 
-void QuickHullInit_sequential(
+void QuickHullInit(
   Point* points,
   int numPoints,
   vector<Point> &hull
@@ -54,13 +54,13 @@ void QuickHullInit_sequential(
 
   #pragma region 4. Recursion
   //================= 4. Recurse on the two halves =================
-  QuickHull_sequential(upperHalf, left, right, hull, 0);
-  QuickHull_sequential(lowerHalf, right, left, hull, 0);
+  QuickHull(upperHalf, left, right, hull, 0);
+  QuickHull(lowerHalf, right, left, hull, 0);
   //================================================================
   #pragma endregion
 }
 
-void QuickHull_sequential(
+void QuickHull(
   vector<Point> &points,
   Point a, Point b,
   vector<Point> &hull,
@@ -146,8 +146,8 @@ void QuickHull_sequential(
 
   #pragma region 5. Recursion
   //================= 4. Recurse on the two halves =================
-  QuickHull_sequential(upperHalf, a, maxPoint, hull, iteration + 1);
-  QuickHull_sequential(lowerHalf, maxPoint, b, hull, iteration + 1);
+  QuickHull(upperHalf, a, maxPoint, hull, iteration + 1);
+  QuickHull(lowerHalf, maxPoint, b, hull, iteration + 1);
   //================================================================
   #pragma endregion
 }

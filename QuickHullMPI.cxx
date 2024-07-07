@@ -2,7 +2,7 @@
 > mpicxx -o QuickHullMPI.out QuickHullMPI.cxx && mpirun -n 4 ./QuickHullMPI.out
 */
 #include "lib.hxx"
-#include "QuickHullSequential.hxx"
+#include "QuickHull.hxx"
 
 using namespace std;
 
@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
 
   vector<Point> hull;
 
-  QuickHullInit_sequential(points, pointsPerProcess, hull);
+  QuickHullInit(points, pointsPerProcess, hull);
 
   // FIXME: is this free necessary?
   free(points);
@@ -151,7 +151,7 @@ int main(int argc, char *argv[]) {
     // #endif
 
     vector<Point> finalHull;
-    QuickHullInit_sequential(hull.data(), hull.size(), finalHull);
+    QuickHullInit(hull.data(), hull.size(), finalHull);
 
     if (finalHull.size() < 100000) {
       savePointsToFile(finalHull, "hull.txt");

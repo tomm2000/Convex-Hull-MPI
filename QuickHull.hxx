@@ -1,21 +1,21 @@
-#ifndef QUICKHULLSEQUENTIAL_HXX
-#define QUICKHULLSEQUENTIAL_HXX
+#ifndef QUICKHULL_HXX
+#define QUICKHULL_HXX
 
 #include "lib.hxx"
 
 using namespace std;
 
-void QuickHullInit_sequential(
+void QuickHullInit(
   Point* points,
   int numPoints,
   vector<Point> &hull
 );
 
-void QuickHull_sequential(
+void QuickHull(
     std::vector<Point> &points,
     Point a, Point b,
     std::vector<Point> &hull,
     int iteration
 );
 
-#endif // QUICKHULLSEQUENTIAL_HXX
+#endif // QUICKHULL_HXX
