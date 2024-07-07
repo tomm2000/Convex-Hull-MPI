@@ -3,7 +3,14 @@
 
 #include "lib.hxx"
 
-// Declaration of the QuickHull_sequential function
+using namespace std;
+
+void QuickHullInit_sequential(
+  Point* points,
+  int numPoints,
+  vector<Point> &hull
+);
+
 void QuickHull_sequential(
     std::vector<Point> &points,
     Point a, Point b,

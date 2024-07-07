@@ -2,6 +2,64 @@
 
 using namespace std;
 
+
+void QuickHullInit_sequential(
+  Point* points,
+  int numPoints,
+  vector<Point> &hull
+) {
+  #pragma region 2. extremes
+  //================= 2. Find the 2 extreme points =================
+
+  // find the local extreme points
+  Point left = points[0], right = points[0];
+
+  for (int i = 1; i < numPoints; i++) {
+    if (points[i].x < left.x) {
+      left = points[i];
+    } else if (points[i].x > right.x) {
+      right = points[i];
+    }
+  }
+
+  hull.push_back(right);
+  hull.push_back(left);
+  //================================================================
+  #pragma endregion
+
+  #pragma region 3. Split points
+  //================= 3. Split points into two halves =================
+  vector<Point> upperHalf, lowerHalf = vector<Point>();
+  upperHalf.reserve(numPoints / 2);
+  lowerHalf.reserve(numPoints / 2);
+
+  float dx = right.x - left.x;
+  float dy = right.y - left.y;
+
+  for (int i = 0; i < numPoints; i++) {
+    // if its the left or right point, skip it
+    if (points[i].x == left.x && points[i].y == left.y) { continue; }
+    if (points[i].x == right.x && points[i].y == right.y) { continue; }
+    
+    float line = dy * (points[i].x - left.x) - dx * (points[i].y - left.y);
+
+    if (line > 0) {
+      upperHalf.push_back(points[i]);
+    } else if (line < 0) {
+      lowerHalf.push_back(points[i]);
+    }
+  }
+  //================================================================
+  #pragma endregion
+
+  #pragma region 4. Recursion
+  //================= 4. Recurse on the two halves =================
+  QuickHull_sequential(upperHalf, left, right, hull, 0);
+  QuickHull_sequential(lowerHalf, right, left, hull, 0);
+  //================================================================
+  #pragma endregion
+}
+
 void QuickHull_sequential(
   vector<Point> &points,
   Point a, Point b,

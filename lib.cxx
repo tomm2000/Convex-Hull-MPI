@@ -28,6 +28,12 @@ float LineDistanceCalculator::distanceFromLine(const Point& p) const {
   return std::abs(dy * p.x - dx * p.y + (b.x * a.y - b.y * a.x)) / denominator;
 }
 
+string Point::toString() {
+  stringstream ss;
+  ss << "(" << x << ", " << y << ")";
+  return ss.str();
+}
+
 bool insideTriangle(Point &s, Point &a, Point &b, Point &c) {
   int as_x = s.x - a.x;
   int as_y = s.y - a.y;

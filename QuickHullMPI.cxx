@@ -2,7 +2,6 @@
 > mpicxx -o QuickHullMPI.out QuickHullMPI.cxx && mpirun -n 4 ./QuickHullMPI.out
 */
 #include "lib.hxx"
-#include "QuickHullDistributed.hxx"
 #include "QuickHullSequential.hxx"
 
 using namespace std;
@@ -11,8 +10,8 @@ using namespace std;
 // #define DEBUG
 
 int main(int argc, char *argv[]) { 
-  clock_t glob_start_time, glob_end_time;
-  double glob_elapsed_time;
+  clock_t glob_start_time, glob_end_time, start_time, end_time;
+  double glob_elapsed_time, elapsed;
 
   glob_start_time = clock();
 
@@ -37,7 +36,7 @@ int main(int argc, char *argv[]) {
   #pragma region 1. Input
   //================= 1. Read points from file =================
   #ifdef TIMING
-  clock_t start_time = clock();
+  start_time = clock();
   #endif
 
   MPI_File fh;
@@ -70,8 +69,8 @@ int main(int argc, char *argv[]) {
   #endif
 
   #ifdef TIMING
-  clock_t end_time = clock();
-  double elapsed = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
+  end_time = clock();
+  elapsed = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
   if (elapsed * 1000 > 1) {
     cout << "<process " << rank << "> Time to read points: " << elapsed * 1000.0 << "ms" << endl;
   }
@@ -86,137 +85,45 @@ int main(int argc, char *argv[]) {
   //================================================================
   #pragma endregion
 
-  #pragma region 2. extremes
-  //================= 2. Find the 2 extreme points =================
+  #pragma region 4. Local hull
+  //================= 4. Recurse on the two halves =================
   glob_start_time = clock();
 
   #ifdef TIMING
   start_time = clock();
   #endif
 
-  // find the local extreme points
-  Point left = points[0], right = points[0];
+  vector<Point> hull;
 
-  for (int i = 1; i < pointsPerProcess; i++) {
-    if (points[i].x < left.x) {
-      left = points[i];
-    } else if (points[i].x > right.x) {
-      right = points[i];
-    }
-  }
-
-  #ifdef DEBUG
-  cout << "<process " << rank << "> Local left: " << left.toString() << ", right: " << right.toString() << endl;
-  #endif
-
-  Point *leftPoints = new Point[numP];
-  Point *rightPoints = new Point[numP];
-
-  MPI_Allgather(&left, 1, PointType, leftPoints, 1, PointType, MPI_COMM_WORLD);
-  MPI_Allgather(&right, 1, PointType, rightPoints, 1, PointType, MPI_COMM_WORLD);
-
-  left = leftPoints[0];
-  right = rightPoints[0];
-
-  for (int i = 1; i < numP; i++) {
-    if (leftPoints[i].x < left.x) {
-      left = leftPoints[i];
-    } else if (leftPoints[i].x == left.x && leftPoints[i].y < left.y) {
-      left = leftPoints[i];
-    }
-
-    if (rightPoints[i].x > right.x) {
-      right = rightPoints[i];
-    } else if (rightPoints[i].x == right.x && rightPoints[i].y > right.y) {
-      right = rightPoints[i];
-    }
-  }
-
-  #ifdef TIMING
-  end_time = clock();
-  elapsed = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
-  if (elapsed * 1000 > 1) {
-    cout << "<process " << rank << "> Time to find extreme points: " << elapsed * 1000.0 << "ms" << endl;
-  }
-  #endif
-
-  #ifdef DEBUG
-  cout << "<process " << rank << "> Final left: " << left.toString() << ", right: " << right.toString() << endl;
-  #endif
-  
-  //================================================================
-  #pragma endregion
-
-  #pragma region 3. Split points
-  //================= 3. Split points into two halves =================
-  #ifdef TIMING
-  start_time = clock();
-  #endif
-
-  vector<Point> upperHalf, lowerHalf = vector<Point>();
-  upperHalf.reserve(pointsPerProcess / 2);
-  lowerHalf.reserve(pointsPerProcess / 2);
-
-  float dx = right.x - left.x;
-  float dy = right.y - left.y;
-
-  for (int i = 0; i < pointsPerProcess; i++) {
-    // if its the left or right point, skip it
-    if (points[i].x == left.x && points[i].y == left.y) { continue; }
-    if (points[i].x == right.x && points[i].y == right.y) { continue; }
-    
-    float line = dy * (points[i].x - left.x) - dx * (points[i].y - left.y);
-
-    if (line > 0) {
-      upperHalf.push_back(points[i]);
-    } else if (line < 0) {
-      lowerHalf.push_back(points[i]);
-    }
-  }
+  QuickHullInit_sequential(points, pointsPerProcess, hull);
 
   // FIXME: is this free necessary?
   free(points);
 
-  #ifdef DEBUG
-  cout << "<process " << rank << "> Upper half: " << upperHalf.size() << ", lower half: " << lowerHalf.size() << endl;
-  #endif
-
   #ifdef TIMING
   end_time = clock();
   elapsed = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
+
   if (elapsed * 1000 > 1) {
-    cout << "<process " << rank << "> Time to split points: " << elapsed * 1000.0 << "ms" << endl;
+    cout << "Time to local hull: " << elapsed * 1000.0 << "ms" << endl;
   }
+  #endif
+
+  #ifdef DEBUG
+  cout << "Local hull size: " << hull.size() << endl;
   #endif
   //================================================================
   #pragma endregion
 
-  #pragma region 4. Recursion
-  //================= 4. Recurse on the two halves =================
-  vector<Point> hull;
-
-  hull.push_back(right);
-  hull.push_back(left);
-
-  vector<Point> pointsLeft  = QuickHullDistributed(PointType, numP, rank, upperHalf, left, right, hull, 0);
-  vector<Point> _pointsLeft = QuickHullDistributed(PointType, numP, rank, lowerHalf, right, left, hull, 0);
-
-    // Comleted distributed quickhull
-    // cout << "Completed distributed quickhull" << endl;
-    cout << "<process " << rank << "> Points left: " << pointsLeft.size() << endl;
-
-    // Running sequential quickhull with {} points
-    cout << "<process " << rank << "> Running sequential quickhull with " << pointsLeft.size() << " points" << endl;
-
-  MPI_Barrier(MPI_COMM_WORLD);
-
-  pointsLeft.insert(pointsLeft.end(), _pointsLeft.begin(), _pointsLeft.end());
-  int NpointsLeft = pointsLeft.size();
-
-  // gather points left
+  #pragma region 5. Merge hulls
+  //================= 5. Merge the hulls from each process =================
   if (rank == 0) {
+    // #ifdef TIMING
+    start_time = clock();
+    // #endif
+
     for (int i = 1; i < numP; i++) {
-      cout << "Receiving points from process " << i << endl;
+      // cout << "Receiving points from process " << i << endl;
 
       int pointsLeftProcess;
       MPI_Recv(&pointsLeftProcess, 1, MPI_INT, i, msg_tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -225,35 +132,58 @@ int main(int argc, char *argv[]) {
       MPI_Recv(points, pointsLeftProcess, PointType, i, empty_points, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
       for (int j = 0; j < pointsLeftProcess; j++) {
-        pointsLeft.push_back(points[j]);
+        hull.push_back(points[j]);
       }
     }
+    cout << "Merged hull size: " << hull.size() << endl;
 
-    // print points left
-    cout << "Points left: " << pointsLeft.size() << endl;
+    // #ifdef TIMING
+    end_time = clock();
+    elapsed = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
 
-    QuickHull_sequential(pointsLeft, left, right, hull, 0);
+    if (elapsed * 1000 > 1) {
+      cout << "Time to merge hulls: " << elapsed * 1000.0 << "ms" << endl;
+    }
+    // #endif
+
+    // #ifdef TIMING
+    start_time = clock();
+    // #endif
+
+    vector<Point> finalHull;
+    QuickHullInit_sequential(hull.data(), hull.size(), finalHull);
+
+    if (finalHull.size() < 100000) {
+      savePointsToFile(finalHull, "hull.txt");
+    }
+
+    // #ifdef TIMING
+    end_time = clock();
+    elapsed = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
+
+    if (elapsed * 1000 > 1) {
+      cout << "Time to final hull: " << elapsed * 1000.0 << "ms" << endl;
+    }
+    // #endif
+
+    // #ifdef DEBUG
+    cout << "Hull size: " << finalHull.size() << endl;
+    // #endif
   } else {
     // send number of points
+    int NpointsLeft = hull.size();
     MPI_Send(&NpointsLeft, 1, MPI_INT, 0, msg_tag, MPI_COMM_WORLD);
 
+    #ifdef DEBUG
+    cout << "Sending " << NpointsLeft << " points to process 0" << endl;
+    #endif
+
     // send points
-    Point *pointsArray = new Point[NpointsLeft];
-    std::copy(pointsLeft.begin(), pointsLeft.end(), pointsArray);
+    Point *pointsArray = new Point[hull.size()];
+    std::copy(hull.begin(), hull.end(), pointsArray);
 
-    MPI_Send(pointsArray, NpointsLeft, PointType, 0, empty_points, MPI_COMM_WORLD);
+    MPI_Send(pointsArray, hull.size(), PointType, 0, empty_points, MPI_COMM_WORLD);
   }
-
-
-  if (rank == 0) {
-    cout << "Hull size: " << hull.size() << endl;
-
-    if (hull.size() < 1000) {
-      savePointsToFile(hull, "hull.txt");
-    }
-  }
-  //================================================================
-  #pragma endregion
 
   // Terminate MPI
   MPI_Finalize();
