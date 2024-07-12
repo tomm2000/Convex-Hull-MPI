@@ -1,5 +1,5 @@
 /*
-g++ randompoints.cpp -o randompoints && ./randompoints
+g++ randompoints.cpp -o build/randompoints -O3 && ./build/randompoints [#points=100]
 */
 
 #include <iostream>
@@ -10,7 +10,14 @@ using namespace std;
 // #define TIMING
 // #define DEBUG
 
+#define POINTS_CIRCLE
+// #define POINTS_TORUS
+// #define POINTS_GAUSSIAN
+// #define POINTS_CIRCUMFERENCE
+// #define POINTS_SQUARE
+
 #define RADIUS 1000000
+#define TORUS_STROKE RADIUS / 4
 
 int main(int argc, char *argv[]) {
   // if there are 2 arguments, the first one is the number of points
@@ -50,12 +57,58 @@ int main(int argc, char *argv[]) {
     int pointsToWrite = min(BUFFER_SIZE, NPOINTS - i);
 
     for (int j = 0; j < pointsToWrite; j++) {
+
+      #ifdef POINTS_CIRCLE
       // generate points uniformly distributed in a circle
       double angle = (double) rand() / RAND_MAX * 2 * 3.14159265359;
       double r = sqrt((double) rand() / RAND_MAX) * RADIUS;
 
       int x = r * cos(angle);
       int y = r * sin(angle);
+      #endif
+
+      #ifdef POINTS_TORUS
+      // generate points uniformly distributed in a torus
+      double angle = (double) rand() / RAND_MAX * 2 * 3.14159265359;
+
+      // radius should be between RADIUS + TORUS_STROKE and RADIUS - TORUS_STROKE
+      double r = (RADIUS - TORUS_STROKE) + (double) rand() / RAND_MAX * 2 * TORUS_STROKE;
+
+      int x = r * cos(angle);
+      int y = r * sin(angle);
+      #endif
+
+      #ifdef POINTS_GAUSSIAN
+      // generate points uniformly distributed in a gaussian
+      double x = 0;
+      double y = 0;
+
+      for (int k = 0; k < 12; k++) {
+        x += (double) rand() / RAND_MAX;
+        y += (double) rand() / RAND_MAX;
+      }
+
+      x -= 6;
+      y -= 6;
+
+      x *= RADIUS;
+      y *= RADIUS;
+      #endif
+      
+      #ifdef POINTS_CIRCUMFERENCE
+      // generate points uniformly distributed in a circumference
+      double angle = (double) rand() / RAND_MAX * 2 * 3.14159265359;
+
+      int x = RADIUS * cos(angle);
+      int y = RADIUS * sin(angle);
+      #endif
+
+      #ifdef POINTS_SQUARE
+      // generate points uniformly distributed in a square
+      int x = (rand() % (2 * RADIUS)) - RADIUS;
+      int y = (rand() % (2 * RADIUS)) - RADIUS;
+      #endif
+
 
       buffer[j * 2] = x;
       buffer[j * 2 + 1] = y;

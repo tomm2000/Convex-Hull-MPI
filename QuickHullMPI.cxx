@@ -1,5 +1,5 @@
 /*
-> mpicxx -o QuickHullMPI.out QuickHullMPI.cxx && mpirun -n 4 ./QuickHullMPI.out
+make && mpirun -n 4 ./QuickHullMPI.out
 */
 #include "lib.hxx"
 #include "QuickHull.hxx"

@@ -2,6 +2,7 @@
 *.txt
 *.out
 *.exe
+*.png
 
 # ignore all files in build directory
 build/

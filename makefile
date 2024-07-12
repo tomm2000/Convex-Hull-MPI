@@ -26,12 +26,12 @@ $(BUILDDIR):
 
 # Rule to create the executable
 $(EXECUTABLE): $(OBJECTS)
-	srun -N 1 $(CXX) $(CXXFLAGS) $(OBJECTS) -o $@
+	$(CXX) $(CXXFLAGS) $(OBJECTS) -o $@
 	chmod +x $@
 
 # Rule to compile source files to object files
 $(BUILDDIR)/%.o: $(SRCDIR)/%.cxx
-	srun -N 1 $(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Clean target
 clean:
