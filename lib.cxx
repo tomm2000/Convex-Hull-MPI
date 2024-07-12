@@ -16,16 +16,21 @@ MPI_Datatype registerPointType() {
   return PointType;
 }
 
-LineDistanceCalculator::LineDistanceCalculator(const Point& a, const Point& b) {
-  dx = b.x - a.x;
-  dy = b.y - a.y;
-  this->a = a;
-  this->b = b;
-  denominator = std::sqrt(dx * dx + dy * dy);
+LineDistanceCalculator::LineDistanceCalculator(const Point& a, const Point& b) : a(a), b(b) {
+    dx = static_cast<long long>(b.x) - a.x;
+    dy = static_cast<long long>(b.y) - a.y;
+    denominator = std::sqrt(static_cast<double>(dx) * dx + static_cast<double>(dy) * dy);
 }
 
-float LineDistanceCalculator::distanceFromLine(const Point& p) const {
-  return std::abs(dy * p.x - dx * p.y + (b.x * a.y - b.y * a.x)) / denominator;
+double LineDistanceCalculator::distanceFromLine(const Point& p) const {
+    if (denominator == 0) {
+        return std::numeric_limits<double>::infinity();
+    }
+    long long numerator = std::abs(dy * static_cast<long long>(p.x) - 
+                                   dx * static_cast<long long>(p.y) + 
+                                   static_cast<long long>(b.x) * a.y - 
+                                   static_cast<long long>(b.y) * a.x);
+    return static_cast<double>(numerator) / denominator;
 }
 
 string Point::toString() {
@@ -35,14 +40,14 @@ string Point::toString() {
 }
 
 bool insideTriangle(Point &s, Point &a, Point &b, Point &c) {
-  int as_x = s.x - a.x;
-  int as_y = s.y - a.y;
-
-  bool s_ab = (b.x - a.x) * as_y - (b.y - a.y) * as_x > 0;
-
-  if ((c.x - a.x) * as_y - (c.y - a.y) * as_x > 0 == s_ab) 
+  long long as_x = (long long)s.x - a.x;
+  long long as_y = (long long)s.y - a.y;
+  
+  bool s_ab = ((long long)b.x - a.x) * as_y - ((long long)b.y - a.y) * as_x > 0;
+  if (((long long)c.x - a.x) * as_y - ((long long)c.y - a.y) * as_x > 0 == s_ab)
       return false;
-  if ((c.x - b.x) * (s.y - b.y) - (c.y - b.y)*(s.x - b.x) > 0 != s_ab) 
+
+  if (((long long)c.x - b.x) * (s.y - b.y) - ((long long)c.y - b.y) * (s.x - b.x) > 0 != s_ab)
       return false;
   return true;
 }

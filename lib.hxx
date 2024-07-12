@@ -27,12 +27,13 @@ MPI_Datatype registerPointType();
 // Class for calculating distance from a line
 class LineDistanceCalculator {
 private:
-    float dx, dy, denominator;
+    long long dx, dy;
     Point a, b;
+    double denominator;
 
 public:
     LineDistanceCalculator(const Point& a, const Point& b);
-    float distanceFromLine(const Point& p) const;
+    double distanceFromLine(const Point& p) const;
 };
 
 // Function to check if a point is inside a triangle

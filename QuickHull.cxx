@@ -124,30 +124,35 @@ void QuickHull(
   vector<Point> upperHalf, lowerHalf;
 
   for (int i = 0; i < points.size(); i++) {
-    float line = (maxPoint.y - a.y) * (points[i].x - a.x) - (maxPoint.x - a.x) * (points[i].y - a.y);
-
-    // if its the left or right point, skip it
-    if (points[i].x == a.x && points[i].y == a.y) {
+    // Skip the endpoints
+    if ((points[i].x == a.x && points[i].y == a.y) ||
+      (points[i].x == maxPoint.x && points[i].y == maxPoint.y)) {
       continue;
     }
 
-    if (points[i].x == maxPoint.x && points[i].y == maxPoint.y) {
-      continue;
-    }
+    // Use long long for intermediate calculations
+    long long dx1 = (long long)maxPoint.x - a.x;
+    long long dy1 = (long long)maxPoint.y - a.y;
+    long long dx2 = (long long)points[i].x - a.x;
+    long long dy2 = (long long)points[i].y - a.y;
 
-    if (line > 0) {
+    // Calculate the cross product
+    long long crossProduct = dx1 * dy2 - dx2 * dy1;
+
+    if (crossProduct > 0) {
       upperHalf.push_back(points[i]);
-    } else if (line < 0) {
+    } else if (crossProduct < 0) {
       lowerHalf.push_back(points[i]);
     }
+    // Points exactly on the line (crossProduct == 0) are ignored
   }
   //================================================================
   #pragma endregion
 
   #pragma region 5. Recursion
   //================= 4. Recurse on the two halves =================
-  QuickHull(upperHalf, a, maxPoint, hull, iteration + 1);
-  QuickHull(lowerHalf, maxPoint, b, hull, iteration + 1);
-  //================================================================
+  QuickHull(upperHalf, maxPoint, b, hull, iteration + 1);
+  QuickHull(lowerHalf, a, maxPoint, hull, iteration + 1);
+  // ================================================================
   #pragma endregion
 }
