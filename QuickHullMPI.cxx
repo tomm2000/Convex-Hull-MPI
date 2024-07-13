@@ -10,7 +10,7 @@ using namespace std;
 // #define DEBUG
 
 // #define LOAD_FROM_FILE
-#define RADIUS 1000000
+#define RADIUS 100000000
 
 int main(int argc, char *argv[]) { 
   clock_t glob_start_time, glob_end_time, start_time, end_time;
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
   #endif
 
   size_t NPOINTS = stol(argv[1]);
-  int seed = 0;
+  int seed = clock();
 
   // if there is a second argument, use it as seed
   if (argc > 2) { seed = atoi(argv[2]); }
@@ -107,6 +107,9 @@ int main(int argc, char *argv[]) {
 
   Point *points = new Point[pointsPerProcess];
 
+  int seed_seed = seed * 23415 + rank * 12345;
+  srand(seed_seed);
+  seed = rand();
   srand(seed);
 
   // generate points in a circle
@@ -122,13 +125,6 @@ int main(int argc, char *argv[]) {
     points[i] = p;
   }
 
-  // create a points vector
-  vector<Point> tempPoints = vector<Point>();
-  tempPoints.reserve(pointsPerProcess);
-  for (int i = 0; i < pointsPerProcess; i++) {
-    tempPoints.push_back(points[i]);
-  }
-
   #ifdef TIMING
   end_time = clock();
   elapsed = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
@@ -139,6 +135,16 @@ int main(int argc, char *argv[]) {
   #endif
   #pragma endregion
   #endif
+
+  if (rank == 0) {
+    cout << "Each process has ~" << pointsPerProcess << " points" << endl;
+    size_t size_per_process = pointsPerProcess * sizeof(Point);
+    cout << "Total size per process: " << (size_t) size_per_process / 1000000 << " MB" << endl;
+
+    // size of the data:
+    size_t size = NPOINTS * sizeof(Point);
+    cout << "Total size of the data: " << (size_t) size / 1000000 << " MB" << endl;
+  }
   
   glob_end_time = clock();
   glob_elapsed_time = ((double) (glob_end_time - glob_start_time)) / CLOCKS_PER_SEC;
@@ -177,6 +183,8 @@ int main(int argc, char *argv[]) {
   //================================================================
   #pragma endregion
 
+  // MPI_Barrier(MPI_COMM_WORLD);
+
   #pragma region 5. Merge hulls
   //================= 5. Merge the hulls from each process =================
   if (rank == 0) {
@@ -185,13 +193,23 @@ int main(int argc, char *argv[]) {
     // #endif
 
     for (int i = 1; i < numP; i++) {
-      // cout << "Receiving points from process " << i << endl;
+      #ifdef DEBUG
+      cout << "<process " << rank << "> Receiving points from process " << i << endl;
+      #endif
 
       size_t pointsLeftProcess;
-      MPI_Recv(&pointsLeftProcess, 1, MPI_UNSIGNED_LONG_LONG, i, msg_tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(&pointsLeftProcess, 1, MPI_UNSIGNED_LONG_LONG, i, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+      #ifdef DEBUG
+      cout << "<process " << rank << "> Points left process " << i << ": " << pointsLeftProcess << endl;
+      #endif
 
       Point *points = new Point[pointsLeftProcess];
-      MPI_Recv(points, pointsLeftProcess, PointType, i, empty_points, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(points, pointsLeftProcess, PointType, i, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+      #ifdef DEBUG
+      cout << "<process " << rank << "> Received points: " << pointsLeftProcess << " from process " << i << endl;
+      #endif
 
       for (size_t j = 0; j < pointsLeftProcess; j++) {
         hull.push_back(points[j]);
@@ -237,17 +255,23 @@ int main(int argc, char *argv[]) {
     MPI_Send(&NpointsLeft, 1, MPI_UNSIGNED_LONG_LONG, 0, msg_tag, MPI_COMM_WORLD);
 
     #ifdef DEBUG
-    cout << "Sending " << NpointsLeft << " points to process 0" << endl;
+    cout << "<process " << rank << "> Sending points: " << NpointsLeft << endl;
     #endif
 
     // send points
     Point *pointsArray = new Point[hull.size()];
     std::copy(hull.begin(), hull.end(), pointsArray);
 
-    MPI_Send(pointsArray, hull.size(), PointType, 0, empty_points, MPI_COMM_WORLD);
+    MPI_Send(pointsArray, hull.size(), PointType, 0, msg_tag, MPI_COMM_WORLD);
+
+    #ifdef DEBUG
+    cout << "<process " << rank << "> Sent points: " << NpointsLeft << endl;
+    #endif
   }
 
-  // Terminate MPI
+  // the child processes that finish early will wait for the parent to finish
+  MPI_Barrier(MPI_COMM_WORLD);
+
   MPI_Finalize();
 
   glob_end_time = clock();

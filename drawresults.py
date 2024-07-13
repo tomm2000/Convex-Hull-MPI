@@ -58,6 +58,7 @@ with open('points.bin', 'rb') as points_file:
 
     max_x, max_y, min_x, min_y = 0, 0, 0, 0
 
+    points_read = 0
     for i in range(8 + size_num_points, len(bytes), size_point):
       x = int.from_bytes(bytes[i:i + size_point // 2], 'little', signed=True)
       y = int.from_bytes(bytes[i + size_point // 2:i + size_point], 'little', signed=True)
@@ -68,9 +69,15 @@ with open('points.bin', 'rb') as points_file:
       min_x = min(min_x, x)
       min_y = min(min_y, y)
 
+      points_read += 1
+      if points_read >= 1_000_000:
+        print("Too many points, breaking")
+        break
+
     PADDING = 100
 
     # draw the points
+    points_read = 0
     for i in range(8 + size_num_points, len(bytes), size_point):
       x = int.from_bytes(bytes[i:i + size_point // 2], 'little', signed=True)
       y = int.from_bytes(bytes[i + size_point // 2:i + size_point], 'little', signed=True)
@@ -78,6 +85,10 @@ with open('points.bin', 'rb') as points_file:
       # scale the points to fit the image, add padding
       drawCircle(draw, x, y, min_x, max_x, min_y, max_y, PADDING, 'black', 1)
 
+      points_read += 1
+      if points_read >= 1_000_000:
+        print("Too many points, breaking")
+        break
 
     # ========================== DRAW THE HULL ==========================
     sum_x = 0
