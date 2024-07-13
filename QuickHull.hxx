@@ -7,7 +7,7 @@ using namespace std;
 
 void QuickHullInit(
   Point* points,
-  int numPoints,
+  size_t numPoints,
   vector<Point> &hull
 );
 

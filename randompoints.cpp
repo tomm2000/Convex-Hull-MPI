@@ -5,6 +5,7 @@ g++ randompoints.cpp -o build/randompoints -O3 && ./build/randompoints [#points=
 #include <iostream>
 #include <fstream>
 #include <math.h>
+#include <string>
 using namespace std;
 
 // #define TIMING
@@ -21,19 +22,20 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
   // if there are 2 arguments, the first one is the number of points
-  int NPOINTS = 1000;
-  if (argc == 2) {
-    NPOINTS = atoi(argv[1]);
-  }
+  size_t NPOINTS = 1000;
 
   int seed = 0;
 
-  if (argc == 3) {
-    NPOINTS = atoi(argv[1]);
+  if (argc == 2) {
+    NPOINTS = stol(argv[1]);
+  } else if (argc == 3) {
+    NPOINTS = stol(argv[1]);
     seed = atoi(argv[2]);
   } else {
     seed = time(NULL);
   }
+
+  cout << "Generating " << NPOINTS << " points with seed " << seed << endl;
 
   clock_t start_time, end_time;
   double elapsed_time;
@@ -44,27 +46,37 @@ int main(int argc, char *argv[]) {
   ofstream file;
   file.open("points.bin");
 
+  // first 4 bytes is the number of bytes used by size_t
+  int size_t_bytes = sizeof(size_t);
+  file.write(reinterpret_cast<char*>(&size_t_bytes), sizeof(int));
+
+  // second 4 bytes is the size of each point
+  int point_size = sizeof(long) * 2;
+  file.write(reinterpret_cast<char*>(&point_size), sizeof(int));
+
   // write the number of points
-  file.write((char*)&NPOINTS, sizeof(int));
+  file.write(reinterpret_cast<char*>(&NPOINTS), sizeof(size_t));
 
   srand(seed);
 
   // write the points
-  const int BUFFER_SIZE = 100;
-  int buffer[BUFFER_SIZE * 2];
+  const size_t BUFFER_SIZE = 100;
+  long buffer[BUFFER_SIZE * 2];
 
-  for (int i = 0; i < NPOINTS; i += BUFFER_SIZE) {
-    int pointsToWrite = min(BUFFER_SIZE, NPOINTS - i);
+  for (size_t i = 0; i < NPOINTS; i += BUFFER_SIZE) {
+    // int pointsToWrite = min(BUFFER_SIZE, NPOINTS - i);
+    size_t pointsToWrite = BUFFER_SIZE;
+    if (i + pointsToWrite > NPOINTS) { pointsToWrite = NPOINTS - i; }
 
-    for (int j = 0; j < pointsToWrite; j++) {
+    for (size_t j = 0; j < pointsToWrite; j++) {
 
       #ifdef POINTS_CIRCLE
       // generate points uniformly distributed in a circle
       double angle = (double) rand() / RAND_MAX * 2 * 3.14159265359;
       double r = sqrt((double) rand() / RAND_MAX) * RADIUS;
 
-      int x = r * cos(angle);
-      int y = r * sin(angle);
+      long x = r * cos(angle);
+      long y = r * sin(angle);
       #endif
 
       #ifdef POINTS_TORUS
@@ -74,8 +86,8 @@ int main(int argc, char *argv[]) {
       // radius should be between RADIUS + TORUS_STROKE and RADIUS - TORUS_STROKE
       double r = (RADIUS - TORUS_STROKE) + (double) rand() / RAND_MAX * 2 * TORUS_STROKE;
 
-      int x = r * cos(angle);
-      int y = r * sin(angle);
+      long x = r * cos(angle);
+      long y = r * sin(angle);
       #endif
 
       #ifdef POINTS_GAUSSIAN
@@ -93,20 +105,23 @@ int main(int argc, char *argv[]) {
 
       x *= RADIUS;
       y *= RADIUS;
+
+      x = (long) x;
+      y = (long) y;
       #endif
       
       #ifdef POINTS_CIRCUMFERENCE
       // generate points uniformly distributed in a circumference
       double angle = (double) rand() / RAND_MAX * 2 * 3.14159265359;
 
-      int x = RADIUS * cos(angle);
-      int y = RADIUS * sin(angle);
+      long x = RADIUS * cos(angle);
+      long y = RADIUS * sin(angle);
       #endif
 
       #ifdef POINTS_SQUARE
       // generate points uniformly distributed in a square
-      int x = (rand() % (2 * RADIUS)) - RADIUS;
-      int y = (rand() % (2 * RADIUS)) - RADIUS;
+      long x = (rand() % (2 * RADIUS)) - RADIUS;
+      long y = (rand() % (2 * RADIUS)) - RADIUS;
       #endif
 
 
@@ -114,7 +129,7 @@ int main(int argc, char *argv[]) {
       buffer[j * 2 + 1] = y;
     }
 
-    file.write((char*)buffer, sizeof(int) * pointsToWrite * 2);
+    file.write(reinterpret_cast<char*>(buffer), sizeof(long) * pointsToWrite * 2);
   }
 
   file.close();

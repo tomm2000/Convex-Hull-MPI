@@ -5,7 +5,7 @@ using namespace std;
 
 void QuickHullInit(
   Point* points,
-  int numPoints,
+  size_t numPoints,
   vector<Point> &hull
 ) {
   #pragma region 2. extremes
@@ -14,7 +14,7 @@ void QuickHullInit(
   // find the local extreme points
   Point left = points[0], right = points[0];
 
-  for (int i = 1; i < numPoints; i++) {
+  for (size_t i = 1; i < numPoints; i++) {
     if (points[i].x < left.x) {
       left = points[i];
     } else if (points[i].x > right.x) {
@@ -33,15 +33,15 @@ void QuickHullInit(
   upperHalf.reserve(numPoints / 2);
   lowerHalf.reserve(numPoints / 2);
 
-  float dx = right.x - left.x;
-  float dy = right.y - left.y;
+  double dx = right.x - left.x;
+  double dy = right.y - left.y;
 
-  for (int i = 0; i < numPoints; i++) {
+  for (size_t i = 0; i < numPoints; i++) {
     // if its the left or right point, skip it
     if (points[i].x == left.x && points[i].y == left.y) { continue; }
     if (points[i].x == right.x && points[i].y == right.y) { continue; }
     
-    float line = dy * (points[i].x - left.x) - dx * (points[i].y - left.y);
+    double line = dy * (points[i].x - left.x) - dx * (points[i].y - left.y);
 
     if (line > 0) {
       upperHalf.push_back(points[i]);
@@ -83,8 +83,8 @@ void QuickHull(
 
   LineDistanceCalculator lineDistanceCalculator(a, b);
 
-  for (int i = 0; i < points.size(); i++) {
-    float distance = lineDistanceCalculator.distanceFromLine(points[i]);
+  for (size_t i = 0; i < points.size(); i++) {
+    double distance = lineDistanceCalculator.distanceFromLine(points[i]);
 
     if (distance > maxDistance) {
       maxDistance = distance;
@@ -100,9 +100,9 @@ void QuickHull(
   #pragma region 3. Triangle
   //================= 3. Remove points inside the triangle =================
   vector<Point> newPoints;
-  int removedPoints = 0;
+  size_t removedPoints = 0;
 
-  for (int i = 0; i < points.size(); i++) {
+  for (size_t i = 0; i < points.size(); i++) {
     // if the point is the same as the max point, skip it
     if (points[i].x == maxPoint.x && points[i].y == maxPoint.y) {
       continue;
@@ -123,7 +123,7 @@ void QuickHull(
   //================= 4. Split points into two halves =================
   vector<Point> upperHalf, lowerHalf;
 
-  for (int i = 0; i < points.size(); i++) {
+  for (size_t i = 0; i < points.size(); i++) {
     // Skip the endpoints
     if ((points[i].x == a.x && points[i].y == a.y) ||
       (points[i].x == maxPoint.x && points[i].y == maxPoint.y)) {
@@ -131,10 +131,10 @@ void QuickHull(
     }
 
     // Use long long for intermediate calculations
-    long long dx1 = (long long)maxPoint.x - a.x;
-    long long dy1 = (long long)maxPoint.y - a.y;
-    long long dx2 = (long long)points[i].x - a.x;
-    long long dy2 = (long long)points[i].y - a.y;
+    long long dx1 = (long long) maxPoint.x - a.x;
+    long long dy1 = (long long) maxPoint.y - a.y;
+    long long dx2 = (long long) points[i].x - a.x;
+    long long dy2 = (long long) points[i].y - a.y;
 
     // Calculate the cross product
     long long crossProduct = dx1 * dy2 - dx2 * dy1;

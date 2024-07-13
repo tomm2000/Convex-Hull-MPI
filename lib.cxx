@@ -5,7 +5,7 @@ using namespace std;
 MPI_Datatype registerPointType() {
   // Create a new MPI datatype to represent a Point
   MPI_Datatype PointType;
-  MPI_Datatype type[2] = {MPI_INT, MPI_INT};
+  MPI_Datatype type[2] = {MPI_LONG, MPI_LONG};
   int blocklen[2] = {1, 1};
   MPI_Aint displacements[2];
   displacements[0] = offsetof(Point, x);
@@ -17,9 +17,9 @@ MPI_Datatype registerPointType() {
 }
 
 LineDistanceCalculator::LineDistanceCalculator(const Point& a, const Point& b) : a(a), b(b) {
-    dx = static_cast<long long>(b.x) - a.x;
-    dy = static_cast<long long>(b.y) - a.y;
-    denominator = std::sqrt(static_cast<double>(dx) * dx + static_cast<double>(dy) * dy);
+  dx = static_cast<long long>(b.x) - a.x;
+  dy = static_cast<long long>(b.y) - a.y;
+  denominator = std::sqrt(static_cast<double>(dx) * dx + static_cast<double>(dy) * dy);
 }
 
 double LineDistanceCalculator::distanceFromLine(const Point& p) const {
@@ -80,5 +80,40 @@ void savePointsToFile(vector<Point> points, string filename) {
   for (int i = 0; i < points.size(); i++)
   {
     outputFile << points[i].x << " " << points[i].y << endl;
+  }
+}
+
+
+void savePointsToBinary(std::vector<Point> points, std::string filename) {
+  ofstream outputFile(filename, ios::binary);
+
+  if (!outputFile.is_open())
+  {
+    cerr << "Error opening file: " << filename
+         << std::endl;
+
+    // Check for specific error conditions
+    if (outputFile.bad())
+    {
+      cerr << "Fatal error: badbit is set." << endl;
+    }
+
+    if (outputFile.fail())
+    {
+      // Print a more detailed error message using strerror
+      cerr << "Error details: " << strerror(errno)
+           << endl;
+    }
+
+    // Handle the error or exit the program
+    return;
+  }
+
+  size_t size = points.size();
+  outputFile.write(reinterpret_cast<char*>(&size), sizeof(size_t));
+
+  for (size_t i = 0; i < size; i++) {
+    outputFile.write(reinterpret_cast<char*>(&points[i].x), sizeof(long));
+    outputFile.write(reinterpret_cast<char*>(&points[i].y), sizeof(long));
   }
 }

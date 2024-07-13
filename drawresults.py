@@ -37,6 +37,12 @@ with open('points.bin', 'rb') as points_file:
     # read the bytes
     bytes = points_file.read()
 
+    # first 4 bytes are the size of the number of points
+    size_num_points = int.from_bytes(bytes[:4], 'little')
+
+    # second 4 bytes are the size of each point
+    size_point = int.from_bytes(bytes[4:8], 'little')
+
     # create a 1000x1000 image
     img = Image.new('RGB', (IMG_WIDTH, IMG_HEIGHT))
     draw = ImageDraw.Draw(img)
@@ -46,13 +52,9 @@ with open('points.bin', 'rb') as points_file:
 
     max_x, max_y, min_x, min_y = 0, 0, 0, 0
 
-    # points file contains the points as binary data
-    # each point is represented by two integers
-    # each integer is 4 bytes long and little-endian
-    for i in range(4, len(bytes), 8):
-      # convert 4 bytes to an integer
-      x = int.from_bytes(bytes[i:i+4], 'little', signed=True)
-      y = int.from_bytes(bytes[i+4:i+8], 'little', signed=True)
+    for i in range(8 + size_num_points, len(bytes), size_point):
+      x = int.from_bytes(bytes[i:i + size_point // 2], 'little', signed=True)
+      y = int.from_bytes(bytes[i + size_point // 2:i + size_point], 'little', signed=True)
 
       # update the min and max values
       max_x = max(max_x, x)
@@ -63,9 +65,9 @@ with open('points.bin', 'rb') as points_file:
     PADDING = 100
 
     # draw the points
-    for i in range(4, len(bytes), 8):
-      x = int.from_bytes(bytes[i:i+4], 'little', signed=True)
-      y = int.from_bytes(bytes[i+4:i+8], 'little', signed=True)
+    for i in range(8 + size_num_points, len(bytes), size_point):
+      x = int.from_bytes(bytes[i:i + size_point // 2], 'little', signed=True)
+      y = int.from_bytes(bytes[i + size_point // 2:i + size_point], 'little', signed=True)
 
       # scale the points to fit the image, add padding
       drawCircle(draw, x, y, min_x, max_x, min_y, max_y, PADDING, 'black', 1)
