@@ -39,9 +39,15 @@ with open('points.bin', 'rb') as points_file:
 
     # first 4 bytes are the size of the number of points
     size_num_points = int.from_bytes(bytes[:4], 'little')
+    print("size_num_points: ", size_num_points)
 
     # second 4 bytes are the size of each point
     size_point = int.from_bytes(bytes[4:8], 'little')
+    print("size_point: ", size_point)
+
+    # size_num_points bytes are the number of points
+    num_points = int.from_bytes(bytes[8:8 + size_num_points], 'little')
+    print("num_points: ", num_points)
 
     # create a 1000x1000 image
     img = Image.new('RGB', (IMG_WIDTH, IMG_HEIGHT))
@@ -121,7 +127,7 @@ with open('points.bin', 'rb') as points_file:
     # at the bottom of the image, draw the number of points and hull points
     fontsize = 30
     font = ImageFont.truetype("arial.ttf", fontsize)
-    text = f"Points: {len(bytes) // 8}, Hull size: {len(hull_file.readlines())}"
+    text = f"Points: {num_points}, Hull size: {len(hull_file.readlines())}"
     draw.text((10, IMG_HEIGHT - 50), text, font=font, fill='black')
 
     # save the image

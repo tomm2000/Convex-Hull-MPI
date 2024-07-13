@@ -109,6 +109,14 @@ void savePointsToBinary(std::vector<Point> points, std::string filename) {
     return;
   }
 
+  // first 4 bytes is the number of bytes used by size_t
+  int size_t_bytes = sizeof(size_t);
+  outputFile.write(reinterpret_cast<char*>(&size_t_bytes), sizeof(int));
+
+  // second 4 bytes is the size of each point
+  int point_size = sizeof(long) * 2;
+  outputFile.write(reinterpret_cast<char*>(&point_size), sizeof(int));
+
   size_t size = points.size();
   outputFile.write(reinterpret_cast<char*>(&size), sizeof(size_t));
 

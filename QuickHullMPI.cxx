@@ -9,7 +9,7 @@ using namespace std;
 // #define TIMING
 // #define DEBUG
 
-#define LOAD_FROM_FILE
+// #define LOAD_FROM_FILE
 #define RADIUS 1000000
 
 int main(int argc, char *argv[]) { 
@@ -128,8 +128,6 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < pointsPerProcess; i++) {
     tempPoints.push_back(points[i]);
   }
-
-  savePointsToBinary(tempPoints, "points.bin");
 
   #ifdef TIMING
   end_time = clock();
