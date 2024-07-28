@@ -2,7 +2,7 @@
 CXX = mpicxx
 
 # Compiler flags
-CXXFLAGS = -O3
+CXXFLAGS = -O3 -fopenmp
 
 # Directories
 SRCDIR = .

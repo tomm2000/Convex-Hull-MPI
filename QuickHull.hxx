@@ -2,8 +2,15 @@
 #define QUICKHULL_HXX
 
 #include "lib.hxx"
+#include "omp.h"
 
 using namespace std;
+
+void QuickHullOpenMPInit(
+  Point *points,
+  size_t numPoints,
+  vector<Point> &hull
+);
 
 void QuickHullInit(
   Point* points,
