@@ -9,7 +9,8 @@ or
 - `mpicxx QuickHullMPI.cxx -o build/QuickHullMPI -O3` (compile only once)
 - `mpirun -n 4 ./build/QuickHullMPI` \
 or
-- `mpicxx QuickHullMPI.cxx -o build/QuickHullMPI -O3 && mpirun -n 4 ./build/QuickHullMPI`
+- `make && mpirun -n 4 ./build/QuickHullMPI 100000000`
+- `make && ./build/QuickHullSeq 100000000`
 
 # Format for the input file (points.bin)
 - 4 bytes: #bytes for the number of points (n)
