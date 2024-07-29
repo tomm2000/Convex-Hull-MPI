@@ -2,9 +2,8 @@ import subprocess
 import re
 import os
 
-numpoints = 1_000_000_000
+base_numpoints = 100_000_000
 numtasks_values = [1, 2, 4, 8, 16, 24, 32, 36]
-task_per_node = 36
 num_tries = 5
 
 # clean the build directory
@@ -15,10 +14,11 @@ result = subprocess.run(["make"], stdout=subprocess.PIPE)
 print(f"Compiled QuickHullMPI")
 
 
-with open(f"benchmark_{numpoints}.csv", "w") as f:
+with open(f"benchmark.csv", "w") as f:
   f.write("numpoints,numtasks,hull_size,time_algo\n")
   for num_tasks in numtasks_values:
-
+    numpoints = base_numpoints * num_tasks
+    
     total_elapsed_time = 0
     total_hull_size = 0
 

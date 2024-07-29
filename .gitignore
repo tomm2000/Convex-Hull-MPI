@@ -3,6 +3,7 @@
 *.out
 *.exe
 *.png
+*.csv
 
 # ignore all files in build directory
 build/
