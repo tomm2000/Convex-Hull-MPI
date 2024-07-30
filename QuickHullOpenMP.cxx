@@ -1,6 +1,10 @@
-/*
-make && mpirun -n 4 ./QuickHullMPI.out
-*/
+/**
+ * ==============================================================================
+ * WORK IN PROGRESS
+ * implementazione ibrida del QuickHull con MPI e OpenMP
+ * ==============================================================================
+ */
+
 #include "lib.hxx"
 #include "QuickHull.hxx"
 

@@ -1,6 +1,9 @@
-/*
-make && mpirun -n 4 ./QuickHullMPI.out
-*/
+/**
+ * ==============================================================================
+ * implementazione sequenziale del QuickHull
+ * ==============================================================================
+ */
+
 #include "lib.hxx"
 #include "QuickHull.hxx"
 

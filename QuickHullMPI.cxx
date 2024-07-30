@@ -1,15 +1,18 @@
-/*
-make && mpirun -n 4 ./QuickHullMPI.out
-*/
+/**
+ * ==============================================================================
+ * implementazione distribuita del QuickHull con MPI
+ * ==============================================================================
+ */
+
 #include "lib.hxx"
 #include "QuickHull.hxx"
 
 using namespace std;
 
-// #define TIMING
+#define TIMING
 // #define DEBUG
 
-// #define LOAD_FROM_FILE
+#define LOAD_FROM_FILE
 #define RADIUS 100000000
 
 int main(int argc, char *argv[]) { 
@@ -43,18 +46,18 @@ int main(int argc, char *argv[]) {
   MPI_File_open(MPI_COMM_WORLD, "points.bin", MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
 
   MPI_Status status;
-  size_t numPoints;
-  MPI_File_read_at(fh, sizeof(int) * 2, &numPoints, 1, MPI_UNSIGNED_LONG_LONG, &status);
+  size_t NPOINTS;
+  MPI_File_read_at(fh, sizeof(int) * 2, &NPOINTS, 1, MPI_UNSIGNED_LONG_LONG, &status);
 
   #ifdef DEBUG
-  cout << "<process " << rank << "> Number of points total: " << numPoints << endl;
+  cout << "<process " << rank << "> Number of points total: " << NPOINTS << endl;
   #endif
 
-  size_t pointsPerProcess = ceil(numPoints / numP);
+  size_t pointsPerProcess = ceil(NPOINTS / numP);
   size_t start = rank * pointsPerProcess;
   size_t end = start + pointsPerProcess;
-  if (end > numPoints) { end = numPoints; }
-  if (rank == numP - 1) { end = numPoints; }
+  if (end > NPOINTS) { end = NPOINTS; }
+  if (rank == numP - 1) { end = NPOINTS; }
   pointsPerProcess = end - start;
 
   #ifdef DEBUG
@@ -72,7 +75,7 @@ int main(int argc, char *argv[]) {
   #ifdef TIMING
   end_time = clock();
   elapsed = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
-  if (elapsed * 1000 > 1) {
+  if (rank == 0) {
     cout << "<process " << rank << "> Time to read points: " << elapsed * 1000.0 << "ms" << endl;
   }
   #endif
@@ -129,7 +132,9 @@ int main(int argc, char *argv[]) {
   end_time = clock();
   elapsed = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
 
-  if (elapsed * 1000 > 1) {
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  if (rank == 0) {
     cout << "Time to generate points: " << elapsed * 1000.0 << "ms" << endl;
   }
   #endif
@@ -153,8 +158,8 @@ int main(int argc, char *argv[]) {
     cout << "Init time: " << glob_elapsed_time * 1000.0 << "ms" << endl;
   }
 
-  #pragma region 4. Local hull
-  //================= 4. Recurse on the two halves =================
+  #pragma region 2. Local hull
+  //================= 2. Calculate the local hull =================
   glob_start_time = clock();
 
   #ifdef TIMING
@@ -165,14 +170,15 @@ int main(int argc, char *argv[]) {
 
   QuickHullInit(points, pointsPerProcess, hull);
 
-  // FIXME: is this free necessary?
   free(points);
 
   #ifdef TIMING
   end_time = clock();
   elapsed = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
 
-  if (elapsed * 1000 > 1) {
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  if (rank == 0) {
     cout << "Time to local hull: " << elapsed * 1000.0 << "ms" << endl;
   }
   #endif
@@ -183,14 +189,12 @@ int main(int argc, char *argv[]) {
   //================================================================
   #pragma endregion
 
-  // MPI_Barrier(MPI_COMM_WORLD);
-
-  #pragma region 5. Merge hulls
-  //================= 5. Merge the hulls from each process =================
+  #pragma region 3. Merge hulls
+  //================= 3. Merge hulls =================
   if (rank == 0) {
-    // #ifdef TIMING
+    #ifdef TIMING
     start_time = clock();
-    // #endif
+    #endif
 
     for (int i = 1; i < numP; i++) {
       #ifdef DEBUG
@@ -217,18 +221,18 @@ int main(int argc, char *argv[]) {
     }
     cout << "Merged hull size: " << hull.size() << endl;
 
-    // #ifdef TIMING
+    #ifdef TIMING
     end_time = clock();
     elapsed = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
 
     if (elapsed * 1000 > 1) {
-      cout << "Time to merge hulls: " << elapsed * 1000.0 << "ms" << endl;
+      cout << "Time to gather hulls: " << elapsed * 1000.0 << "ms" << endl;
     }
-    // #endif
+    #endif
 
-    // #ifdef TIMING
+    #ifdef TIMING
     start_time = clock();
-    // #endif
+    #endif
 
     vector<Point> finalHull;
     QuickHullInit(hull.data(), hull.size(), finalHull);
@@ -237,18 +241,14 @@ int main(int argc, char *argv[]) {
       savePointsToFile(finalHull, "hull.txt");
     }
 
-    // #ifdef TIMING
+    #ifdef TIMING
     end_time = clock();
     elapsed = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
 
-    if (elapsed * 1000 > 1) {
-      cout << "Time to final hull: " << elapsed * 1000.0 << "ms" << endl;
-    }
-    // #endif
+    cout << "Time to final hull: " << elapsed * 1000.0 << "ms" << endl;
+    #endif
 
-    // #ifdef DEBUG
     cout << "Hull size: " << finalHull.size() << endl;
-    // #endif
   } else {
     // send number of points
     size_t NpointsLeft = hull.size();
