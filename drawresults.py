@@ -142,7 +142,7 @@ with open('points.bin', 'rb') as points_file:
     draw.text((10, IMG_HEIGHT - 50), text, font=font, fill='black')
 
     # save the image
-    img.save('points.png')
+    img.save('results/points.png')
 
 print("Time taken: ", time.time() - start)
 
