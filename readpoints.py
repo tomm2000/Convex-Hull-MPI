@@ -1,22 +1,23 @@
-# create a list to store the integers
-integers = []
-
 # read the points.bin file and convert it to integers
-with open('points.bin', 'rb') as f:
-  # read the bytes
-  bytes = f.read()
+with open('results/points.txt', 'w') as output_file:
+  with open('results/points.bin', 'rb') as points_file:
+    # read the bytes
+    bytes = points_file.read()
 
-  # points file contains the points as binary data
-  # each point is represented by two integers
-  # each integer is 4 bytes long and little-endian
-  for i in range(0, len(bytes), 4):
-    # convert 4 bytes to an integer
-    x = int.from_bytes(bytes[i:i+4], 'little', signed=True)
-    integers.append(x)
+    # first 4 bytes are the size of the number of points
+    size_num_points = int.from_bytes(bytes[:4], 'little')
+    print("size_num_points: ", size_num_points)
 
+    # second 4 bytes are the size of each point
+    size_point = int.from_bytes(bytes[4:8], 'little')
+    print("size_point: ", size_point)
 
-# write the integers to a file
-with open('points.txt', 'w') as f:
-  # write 2 integers per line
-  for i in range(1, len(integers), 2):
-    f.write(f'{integers[i]} {integers[i+1]}\n')
+    # size_num_points bytes are the number of points
+    num_points = int.from_bytes(bytes[8:8 + size_num_points], 'little')
+    print("num_points: ", num_points)
+
+    for i in range(8 + size_num_points, len(bytes), size_point):
+      x = int.from_bytes(bytes[i:i + size_point // 2], 'little', signed=True)
+      y = int.from_bytes(bytes[i + size_point // 2:i + size_point], 'little', signed=True)
+
+      output_file.write(f"{x} {y}\n")

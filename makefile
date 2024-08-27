@@ -2,52 +2,58 @@
 CXX = mpicxx
 
 # Compiler flags
-CXXFLAGS = -O3 -fopenmp
+CXXFLAGS = -O2 -fopenmp
 
 # Directories
-SRCDIR = .
-BUILDDIR = build
+MAIN_DIR = .
+SRC_DIR = src
+BUILD_DIR = build
 
-# Source files (excluding main files)
-SOURCES = $(filter-out $(SRCDIR)/QuickHullMPI.cxx $(SRCDIR)/QuickHullSeq.cxx $(SRCDIR)/QuickHullOpenMP.cxx, $(wildcard $(SRCDIR)/*.cxx))
+# Source files
+MAIN_SRC = $(MAIN_DIR)/main.cxx
+LIB_SRCS = $(wildcard $(SRC_DIR)/*.cxx)
 
 # Object files
-OBJECTS = $(patsubst $(SRCDIR)/%.cxx,$(BUILDDIR)/%.o,$(SOURCES))
+MAIN_OBJ = $(BUILD_DIR)/main.o
+LIB_OBJS = $(patsubst $(SRC_DIR)/%.cxx,$(BUILD_DIR)/%.o,$(LIB_SRCS))
 
-# Executable names
-EXECUTABLE_MPI = $(BUILDDIR)/QuickHullMPI
-EXECUTABLE_SEQ = $(BUILDDIR)/QuickHullSeq
-EXECUTABLE_OPENMP = $(BUILDDIR)/QuickHullOpenMP
+# All object files
+OBJS = $(MAIN_OBJ) $(LIB_OBJS)
+
+# Header files
+INCLUDES = -I$(MAIN_DIR) -I$(SRC_DIR)
+
+# Executable name
+TARGET = $(BUILD_DIR)/main
 
 # Default target
-all: $(BUILDDIR) $(EXECUTABLE_MPI) $(EXECUTABLE_SEQ) $(EXECUTABLE_OPENMP)
+all: $(BUILD_DIR) $(TARGET)
 
-# Rule to create build directory
-$(BUILDDIR):
-	mkdir -p $(BUILDDIR)
+# Create build directory
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
-# Rule to create the MPI executable
-$(EXECUTABLE_MPI): $(OBJECTS) $(BUILDDIR)/QuickHullMPI.o
-	$(CXX) $(CXXFLAGS) $(OBJECTS) $(BUILDDIR)/QuickHullMPI.o -o $@
-	chmod +x $@
+# Compile main.cxx
+$(MAIN_OBJ): $(MAIN_SRC)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
-# Rule to create the Sequential executable
-$(EXECUTABLE_SEQ): $(OBJECTS) $(BUILDDIR)/QuickHullSeq.o
-	$(CXX) $(CXXFLAGS) $(OBJECTS) $(BUILDDIR)/QuickHullSeq.o -o $@
-	chmod +x $@
+# Compile lib/*.cxx files
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cxx
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
-# Rule to create the OpenMP executable
-$(EXECUTABLE_OPENMP): $(OBJECTS) $(BUILDDIR)/QuickHullOpenMP.o
-	$(CXX) $(CXXFLAGS) -fopenmp $(OBJECTS) $(BUILDDIR)/QuickHullOpenMP.o -o $@
-	chmod +x $@
+# Link
+$(TARGET): $(OBJS)
+	$(CXX) $(CXXFLAGS) $^ -o $@
 
-# Rule to compile source files to object files
-$(BUILDDIR)/%.o: $(SRCDIR)/%.cxx
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+# Run the program
+run: $(TARGET)
+	$(TARGET) 
 
-# Clean target
+mpi: $(TARGET)
+	mpirun -np 1 $(TARGET)
+
+# Clean up
 clean:
-	rm -f $(BUILDDIR)/*.o $(BUILDDIR)/QuickHullMPI $(BUILDDIR)/QuickHullSeq $(BUILDDIR)/QuickHullOpenMP
+	rm -rf $(BUILD_DIR) $(TARGET)
 
-# Phony targets
-.PHONY: all clean
+.PHONY: all run clean

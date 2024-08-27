@@ -32,8 +32,8 @@ def drawLine(draw, start_x, start_y, end_x, end_y, min_x, max_x, min_y, max_y, P
 
   draw.line((start_x, start_y, end_x, end_y), fill=color, width=width)
 
-with open('points.bin', 'rb') as points_file:
-  with open('hull.txt', 'r') as hull_file:
+with open('results/points.bin', 'rb') as points_file:
+  with open('results/hull.txt', 'r') as hull_file:
     # read the bytes
     bytes = points_file.read()
 
@@ -95,45 +95,47 @@ with open('points.bin', 'rb') as points_file:
     sum_y = 0
 
     hull_size = len(hull_file.readlines())
-    hull_file.seek(0)
-    hull = []
 
-    # draw the hull
-    for line in hull_file:
-      # each line has two points
-      coords = line.split(" ")
+    if hull_size > 0:
+      hull_file.seek(0)
+      hull = []
 
-      if len(coords) < 2:
-        continue
+      # draw the hull
+      for line in hull_file:
+        # each line has two points
+        coords = line.split(" ")
 
-      x = int(coords[0])
-      y = int(coords[1])
+        if len(coords) < 2:
+          continue
 
-      sum_x += x
-      sum_y += y
+        x = int(coords[0])
+        y = int(coords[1])
 
-      hull.append((x, y))
-      
-      drawCircle(draw, x, y, min_x, max_x, min_y, max_y, PADDING, 'red', 4)
+        sum_x += x
+        sum_y += y
 
-      sum_x += x
-      sum_y += y
+        hull.append((x, y))
+        
+        drawCircle(draw, x, y, min_x, max_x, min_y, max_y, PADDING, 'red', 4)
 
-    center_x = sum_x // hull_size
-    center_y = sum_y // hull_size
+        sum_x += x
+        sum_y += y
 
-    # sort the hull points based on the angle from the center
-    hull.sort(key=lambda point: math.atan2(point[1] - center_y, point[0] - center_x))
+      center_x = sum_x // hull_size
+      center_y = sum_y // hull_size
 
-    # draw the hull lines
-    for i in range(hull_size):
-      start_x, start_y = hull[i]
-      end_x, end_y = hull[(i + 1) % hull_size]
+      # sort the hull points based on the angle from the center
+      hull.sort(key=lambda point: math.atan2(point[1] - center_y, point[0] - center_x))
 
-      drawLine(draw, start_x, start_y, end_x, end_y, min_x, max_x, min_y, max_y, PADDING, 'red', 2)
+      # draw the hull lines
+      for i in range(hull_size):
+        start_x, start_y = hull[i]
+        end_x, end_y = hull[(i + 1) % hull_size]
+
+        drawLine(draw, start_x, start_y, end_x, end_y, min_x, max_x, min_y, max_y, PADDING, 'red', 2)
 
 
-    hull_file.seek(0)
+      hull_file.seek(0)
 
     # at the bottom of the image, draw the number of points and hull points
     fontsize = 30
@@ -141,7 +143,7 @@ with open('points.bin', 'rb') as points_file:
     text = f"Points: {num_points}, Hull size: {len(hull_file.readlines())}"
     draw.text((10, IMG_HEIGHT - 50), text, font=font, fill='black')
 
-    # save the image
+      # save the image
     img.save('results/points.png')
 
 print("Time taken: ", time.time() - start)

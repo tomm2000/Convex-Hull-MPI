@@ -52,6 +52,21 @@
     "xloctime": "cpp",
     "xmemory": "cpp",
     "xtr1common": "cpp",
-    "quickhull.hxx": "c"
+    "quickhull.hxx": "c",
+    "algorithm": "cpp",
+    "optional": "cpp",
+    "array": "cpp",
+    "deque": "cpp",
+    "ranges": "cpp",
+    "span": "cpp",
+    "stack": "cpp",
+    "functional": "cpp",
+    "list": "cpp",
+    "unordered_map": "cpp",
+    "xhash": "cpp",
+    "chrono": "cpp",
+    "forward_list": "cpp",
+    "iomanip": "cpp",
+    "ratio": "cpp"
   }
 }
