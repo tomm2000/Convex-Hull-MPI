@@ -4,6 +4,14 @@ import os
 import math
 from typing import List
 
+def compileCode(useSlurm: bool = True):
+  if useSlurm:
+    subprocess.run(["srun", "make", "clean"], stdout=subprocess.PIPE)
+    subprocess.run(["srun", "make"], stdout=subprocess.PIPE)
+  else:
+    subprocess.run(["make", "clean"], stdout=subprocess.PIPE)
+    subprocess.run(["make"], stdout=subprocess.PIPE)
+
 def runMPI(
   numNodes: int,
   numTasks: int,
@@ -11,8 +19,7 @@ def runMPI(
   numPoints: int,
   useSlurm: bool = True,
 ) -> str:
-  # result = subprocess.run(["srun", "--mpi=pmix", "--nodes", str(nnodes), "--ntasks", str(num_tasks), "build/main", str(numpoints)], stdout=subprocess.PIPE)
-  # output = str(result.stdout.decode())
+  # srun --mpi=pmix --nodes 8 --ntasks 288 --ntasks-per-node 36 build/QuickHullMPI 10000000000
 
   result = None
 
@@ -22,9 +29,9 @@ def runMPI(
       "--mpi=pmix",
       "--nodes", str(numNodes),
       "--ntasks", str(numTasks),
-      " --ntasks-per-node", str(numTasksPerNode),
+      "--ntasks-per-node", str(numTasksPerNode),
       "build/main",
-      "numpoints=" + str(numPoints),
+      "npoints=" + str(numPoints),
     ], stdout=subprocess.PIPE)
 
   else:
@@ -32,7 +39,7 @@ def runMPI(
       "mpirun",
       "-np", str(numTasks),
       "build/main",
-      "numpoints=" + str(numPoints),
+      "npoints=" + str(numPoints),
     ], stdout=subprocess.PIPE)
 
   return str(result.stdout.decode())
@@ -48,12 +55,12 @@ def parseOutput(output: str) -> dict:
   # Size of hull: 30
 
   try:
-    calcTime = re.search(r"calculation: (\d+(\.\d+)*)s", output).group(1)
-    commTime = re.search(r"communication: (\d+(\.\d+)*)s", output).group(1)
-    finalTime = re.search(r"final: (\d+(\.\d+)*)s", output).group(1)
-    hullSize = re.search(r"Size of hull: (\d+)", output).group(1)
+    calcTime = re.search(r"calculation: (\d+(\.\d+)*)ms", output).group(1)
+    commTime = re.search(r"communication: (\d+(\.\d+)*)ms", output).group(1)
+    finalTime = re.search(r"final: (\d+(\.\d+)*)ms", output).group(1)
+    hullSize = re.search(r"size: (\d+)", output).group(1)
   except:
-    print("Error extracting output : ---------------------------")
+    print("!!! Error extracting output !!!!")
     print(output)
 
     return {

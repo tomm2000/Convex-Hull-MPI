@@ -16,7 +16,7 @@ enum class ConvexHullAlgorithm {
 };
 
 void convex_hull(
-  Point points[],
+  Point *points,
   size_t numPoints,
   std::vector<Point> &hull,
   ConvexHullAlgorithm algorithm = ConvexHullAlgorithm::GRAHAM_SCAN,
@@ -24,32 +24,32 @@ void convex_hull(
 );
 
 void convex_hull_parallel(
-  Point points[],
+  Point *points,
   size_t numPoints,
   std::vector<Point> &hull,
   ConvexHullAlgorithm algorithm = ConvexHullAlgorithm::GRAHAM_SCAN,
   Timer *timer = nullptr
 );
 
-void convex_hull_distributed(
-  MPI_Datatype PointType,
-  MPI_Comm comm,
-  Point points[], // points is only used by the master process
-  size_t numPoints,
-  std::vector<Point> &hull,
-  ConvexHullAlgorithm algorithm = ConvexHullAlgorithm::GRAHAM_SCAN,
-  Timer *timer = nullptr,
-  bool hybrid = false
-);
+// void convex_hull_distributed(
+//   MPI_Datatype PointType,
+//   MPI_Comm comm,
+//   Point points[], // points is only used by the master process
+//   size_t numPoints,
+//   std::vector<Point> &hull,
+//   ConvexHullAlgorithm algorithm = ConvexHullAlgorithm::GRAHAM_SCAN,
+//   Timer *timer = nullptr,
+//   bool hybrid = false
+// );
 
-void convex_hull_predistributed(
-  MPI_Datatype PointType,
-  MPI_Comm comm,
-  Point points[],
-  size_t numPoints,
-  std::vector<Point> &hull,
-  ConvexHullAlgorithm algorithm = ConvexHullAlgorithm::GRAHAM_SCAN,
-  Timer *timer = nullptr,
-  bool hybrid = false
-);
+// void convex_hull_predistributed(
+//   MPI_Datatype PointType,
+//   MPI_Comm comm,
+//   Point points[],
+//   size_t numPoints,
+//   std::vector<Point> &hull,
+//   ConvexHullAlgorithm algorithm = ConvexHullAlgorithm::GRAHAM_SCAN,
+//   Timer *timer = nullptr,
+//   bool hybrid = false
+// );
 #endif
