@@ -5,7 +5,7 @@
 #include "src/point.hxx"
 #include "src/graham_scan.hxx"
 #include "src/point.hxx"
-#include "src/timer.hxx"
+#include "src/utils.hxx"
 #include "src/point_generator.hxx"
 
 int main(int argc, char *argv[]) {
@@ -25,7 +25,11 @@ int main(int argc, char *argv[]) {
   MPI_Datatype PointType = registerPointType();
   #pragma endregion
 
-  const size_t NPOINTS = 10000000;
+  size_t NPOINTS = stol(readArg(argc, argv, "npoints", "100000"));
+
+  if (rank == 0) {
+    printf("Number of points: %lu\n", NPOINTS);
+  }
 
   int memUsage = estimateMemoryUsage(NPOINTS);
   if (rank == 0) {
@@ -54,7 +58,7 @@ int main(int argc, char *argv[]) {
     timer.printTimer("calculation");
     timer.printTimer("communication");
     timer.printTimer("final");
-    printf("Size of hull: %lu\n", hull.size());
+    printf("size: %lu\n", hull.size());
   }
 
   // save_points_binary(points, "results/points.bin");

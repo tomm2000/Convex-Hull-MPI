@@ -8,11 +8,11 @@
 #include "point.hxx"
 #include "graham_scan.hxx"
 #include "hpc_helpers.hpp" 
-#include "timer.hxx"
+#include "utils.hxx"
 
 // enum for convex hull algorithm
 enum class ConvexHullAlgorithm {
-  GRAHAM_SCAN
+  GRAHAM_SCAN,
 };
 
 void convex_hull(
@@ -38,7 +38,8 @@ void convex_hull_distributed(
   size_t numPoints,
   std::vector<Point> &hull,
   ConvexHullAlgorithm algorithm = ConvexHullAlgorithm::GRAHAM_SCAN,
-  Timer *timer = nullptr
+  Timer *timer = nullptr,
+  bool hybrid = false
 );
 
 void convex_hull_predistributed(
@@ -48,6 +49,7 @@ void convex_hull_predistributed(
   size_t numPoints,
   std::vector<Point> &hull,
   ConvexHullAlgorithm algorithm = ConvexHullAlgorithm::GRAHAM_SCAN,
-  Timer *timer = nullptr
+  Timer *timer = nullptr,
+  bool hybrid = false
 );
 #endif

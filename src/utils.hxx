@@ -1,5 +1,5 @@
-#ifndef TIMER_H
-#define TIMER_H
+#ifndef UTILS_H
+#define UTILS_H
 
 #include <iostream>
 #include <unordered_map>
@@ -26,4 +26,5 @@ class Timer {
     void printTimers();
 };
 
+string readArg(int argc, char *argv[], string argName, string defaultValue = "");
 #endif

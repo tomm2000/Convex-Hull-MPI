@@ -98,7 +98,8 @@ void convex_hull_distributed(
     size_t numPoints,
     std::vector<Point> &hull,
     ConvexHullAlgorithm algorithm,
-    Timer *timer) {
+    Timer *timer,
+    bool hybrid) {
   if (timer == nullptr) {
     printf("Timer is null\n");
     timer = new Timer();
@@ -141,7 +142,7 @@ void convex_hull_distributed(
     timer->stop("communication");
   }
 
-  convex_hull_predistributed(PointType, comm, localPoints, localNumPoints, hull, algorithm, timer);
+  convex_hull_predistributed(PointType, comm, localPoints, localNumPoints, hull, algorithm, timer, hybrid);
 }
 
 void convex_hull_predistributed(
@@ -151,7 +152,8 @@ void convex_hull_predistributed(
     size_t numPoints,
     std::vector<Point> &hull,
     ConvexHullAlgorithm algorithm,
-    Timer *timer) {
+    Timer *timer,
+    bool hybrid) {
   if (timer == nullptr) {
     printf("Timer is null\n");
     timer = new Timer();
@@ -163,7 +165,11 @@ void convex_hull_predistributed(
   vector<Point> localHull;
 
   timer->start("calculation");
-  convex_hull(points, numPoints, localHull, algorithm);
+  if (hybrid) {
+    convex_hull_parallel(points, numPoints, localHull, algorithm, timer);
+  } else {
+    convex_hull(points, numPoints, localHull, algorithm, timer);
+  }
   size_t localHullSize = localHull.size();
   timer->stop("calculation");
 
@@ -185,7 +191,11 @@ void convex_hull_predistributed(
     }
 
     timer->start("calculation");
-    convex_hull(mergedHull.data(), mergedHull.size(), hull, algorithm);
+    if (hybrid) {
+      convex_hull_parallel(mergedHull.data(), mergedHull.size(), hull, algorithm, timer);
+    } else {
+      convex_hull(mergedHull.data(), mergedHull.size(), hull, algorithm, timer);
+    }
     timer->stop("calculation");
   } else {
     timer->start("communication");
