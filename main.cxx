@@ -5,6 +5,7 @@
 #include "src/point.hxx"
 #include "src/graham_scan.hxx"
 #include "src/point.hxx"
+#include "src/timer.hxx"
 #include "src/point_generator.hxx"
 
 int main(int argc, char *argv[]) {
@@ -24,7 +25,7 @@ int main(int argc, char *argv[]) {
   MPI_Datatype PointType = registerPointType();
   #pragma endregion
 
-  const size_t NPOINTS = 50000000;
+  const size_t NPOINTS = 10000000;
 
   int memUsage = estimateMemoryUsage(NPOINTS);
   if (rank == 0) {
@@ -35,15 +36,24 @@ int main(int argc, char *argv[]) {
 
   std::vector<Point> hull;
 
-  time_t start = clock();
+  Timer timer = Timer();
 
-  TIMERSTART(convex_hull);
-  
-  convex_hull(points.data(), points.size(), hull, ConvexHullAlgorithm::GRAHAM_SCAN);
-  // convex_hull_parallel(points.data(), points.size(), hull, ConvexHullAlgorithm::GRAHAM_SCAN);
-  // convex_hull_distributed(PointType, MPI_COMM_WORLD, points.data(), points.size(), hull, ConvexHullAlgorithm::GRAHAM_SCAN);
   if (rank == 0) {
-    TIMERSTOP(convex_hull);
+    timer.start("final");
+  }
+  
+  // convex_hull(points.data(), points.size(), hull, ConvexHullAlgorithm::GRAHAM_SCAN);
+  // convex_hull_parallel(points.data(), points.size(), hull, ConvexHullAlgorithm::GRAHAM_SCAN, &timer);
+  convex_hull_distributed(PointType, MPI_COMM_WORLD, points.data(), points.size(), hull, ConvexHullAlgorithm::GRAHAM_SCAN, &timer);
+  // convex_hull_predistributed(PointType, MPI_COMM_WORLD, points.data(), points.size(), hull, ConvexHullAlgorithm::GRAHAM_SCAN, &timer);
+  
+
+  if (rank == 0) {
+    timer.stop("final");
+    printf("========================================\n");
+    timer.printTimer("calculation");
+    timer.printTimer("communication");
+    timer.printTimer("final");
     printf("Size of hull: %lu\n", hull.size());
   }
 

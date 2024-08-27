@@ -50,7 +50,7 @@ run: $(TARGET)
 	$(TARGET) 
 
 mpi: $(TARGET)
-	mpirun -np 1 $(TARGET)
+	mpirun -np 6 $(TARGET)
 
 # Clean up
 clean:

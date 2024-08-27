@@ -2,8 +2,16 @@
 
 using namespace std;
 
+void convex_hull(
+    Point points[],
+    size_t numPoints,
+    std::vector<Point> &hull,
+    ConvexHullAlgorithm algorithm,
+    Timer *timer) {
+  if (timer == nullptr) {
+    timer = new Timer();
+  }
 
-void convex_hull(Point points[], size_t numPoints, std::vector<Point> &hull, ConvexHullAlgorithm algorithm) {
   switch (algorithm) {
     case ConvexHullAlgorithm::GRAHAM_SCAN:
       graham_scan(points, numPoints, hull);
@@ -11,10 +19,27 @@ void convex_hull(Point points[], size_t numPoints, std::vector<Point> &hull, Con
   }
 }
 
-void convex_hull_parallel(Point points[], size_t numPoints, std::vector<Point> &hull, ConvexHullAlgorithm algorithm) {
+void convex_hull_parallel(
+    Point points[],
+    size_t numPoints,
+    std::vector<Point> &hull,
+    ConvexHullAlgorithm algorithm,
+    Timer *timer) {
+  if (timer == nullptr) {
+    timer = new Timer();
+  }
+
   int threadCount = 1;
   int pointsPerThread = 0;
   vector<Point> mergedHull;
+
+// if not defined, call convex_hull
+#if !defined(_OPENMP)
+  convex_hull(points, numPoints, hull, algorithm);
+  return;
+#endif
+
+  timer->start("calculation");
 
 #pragma omp parallel
   {
@@ -37,13 +62,19 @@ void convex_hull_parallel(Point points[], size_t numPoints, std::vector<Point> &
     size_t start = threadId * pointsPerThread;
     size_t end = min(start + pointsPerThread, numPoints);
 
-    if (threadId == threadCount - 1) { end = numPoints; }
+    if (threadId == threadCount - 1) {
+      end = numPoints;
+    }
 
     vector<Point> localHull;
 
-    TIMERSTART(parallel_convex_hull);
     convex_hull(points + start, end - start, localHull, algorithm);
-    TIMERSTOP(parallel_convex_hull);
+
+#pragma omp single
+    {
+      timer->stop("calculation");
+      timer->start("communication");
+    }
 
 #pragma omp critical
     {
@@ -51,19 +82,28 @@ void convex_hull_parallel(Point points[], size_t numPoints, std::vector<Point> &
     }
   }
 
-  printf("Merged hull size=%lu\n", mergedHull.size());
+  timer->stop("communication");
 
+  // printf("Merged hull size=%lu\n", mergedHull.size());
+
+  timer->start("calculation");
   convex_hull(mergedHull.data(), mergedHull.size(), hull, ConvexHullAlgorithm::GRAHAM_SCAN);
+  timer->stop("calculation");
 }
 
 void convex_hull_distributed(
-  MPI_Datatype PointType,
-  MPI_Comm comm,
-  Point points[], // points is only used by the master process
-  size_t numPoints,
-  std::vector<Point> &hull,
-  ConvexHullAlgorithm algorithm
-) {
+    MPI_Datatype PointType,
+    MPI_Comm comm,
+    Point points[],  // points is only used by the master process
+    size_t numPoints,
+    std::vector<Point> &hull,
+    ConvexHullAlgorithm algorithm,
+    Timer *timer) {
+  if (timer == nullptr) {
+    printf("Timer is null\n");
+    timer = new Timer();
+  }
+
   int numP, rank;
   MPI_Comm_size(MPI_COMM_WORLD, &numP);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -76,7 +116,9 @@ void convex_hull_distributed(
     for (int i = 0; i < numP; i++) {
       size_t start = i * numPoints / numP;
       size_t end = (i + 1) * numPoints / numP;
-      if (i == numP - 1) { end = numPoints; }
+      if (i == numP - 1) {
+        end = numPoints;
+      }
       size_t count = end - start;
 
       if (i == 0) {
@@ -84,23 +126,46 @@ void convex_hull_distributed(
         localPoints = new Point[localNumPoints];
         localPoints = points + start;
       } else {
+        timer->start("communication");
         MPI_Send(&count, 1, MPI_UNSIGNED_LONG_LONG, i, 0, comm);
         MPI_Send(points + start, count, PointType, i, 0, comm);
+        timer->stop("communication");
       }
     }
   } else {
+    timer->start("communication");
     MPI_Recv(&localNumPoints, 1, MPI_UNSIGNED_LONG_LONG, 0, 0, comm, MPI_STATUS_IGNORE);
 
     localPoints = new Point[localNumPoints];
     MPI_Recv(localPoints, localNumPoints, PointType, 0, 0, comm, MPI_STATUS_IGNORE);
+    timer->stop("communication");
   }
 
-  // 2. compute the convex hull of the local points
-  vector<Point> localHull;
-  convex_hull(localPoints, localNumPoints, localHull, algorithm);
-  size_t localHullSize = localHull.size();
+  convex_hull_predistributed(PointType, comm, localPoints, localNumPoints, hull, algorithm, timer);
+}
 
-  printf("Rank=%d, localHullSize=%lu\n", rank, localHullSize);
+void convex_hull_predistributed(
+    MPI_Datatype PointType,
+    MPI_Comm comm,
+    Point points[],
+    size_t numPoints,
+    std::vector<Point> &hull,
+    ConvexHullAlgorithm algorithm,
+    Timer *timer) {
+  if (timer == nullptr) {
+    printf("Timer is null\n");
+    timer = new Timer();
+  }
+
+  int numP, rank;
+  MPI_Comm_size(MPI_COMM_WORLD, &numP);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  vector<Point> localHull;
+
+  timer->start("calculation");
+  convex_hull(points, numPoints, localHull, algorithm);
+  size_t localHullSize = localHull.size();
+  timer->stop("calculation");
 
   // 3. gather the local hulls to the master process
   if (rank == 0) {
@@ -108,6 +173,7 @@ void convex_hull_distributed(
     mergedHull.insert(mergedHull.end(), localHull.begin(), localHull.end());
 
     for (int i = 1; i < numP; i++) {
+      timer->start("communication");
       size_t count;
       MPI_Recv(&count, 1, MPI_UNSIGNED_LONG_LONG, i, 0, comm, MPI_STATUS_IGNORE);
 
@@ -115,12 +181,17 @@ void convex_hull_distributed(
       MPI_Recv(remoteHull, count, PointType, i, 0, comm, MPI_STATUS_IGNORE);
 
       mergedHull.insert(mergedHull.end(), remoteHull, remoteHull + count);
+      timer->stop("communication");
     }
 
+    timer->start("calculation");
     convex_hull(mergedHull.data(), mergedHull.size(), hull, algorithm);
+    timer->stop("calculation");
   } else {
+    timer->start("communication");
     MPI_Send(&localHullSize, 1, MPI_UNSIGNED_LONG_LONG, 0, 0, comm);
     MPI_Send(localHull.data(), localHullSize, PointType, 0, 0, comm);
+    timer->stop("communication");
   }
 
   MPI_Barrier(comm);
