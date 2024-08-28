@@ -57,8 +57,6 @@ void convex_hull_parallel(
     // NOTE: qui ci vorrebbe una sezione critica che fa il merge dei risultati
     // anche questa tralasciata per semplificare l'esempio
   }
-  
-  TIMERSTOP(graham_scan);
 
   hull = vector<Point>();
 }
