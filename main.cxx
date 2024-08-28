@@ -8,10 +8,10 @@
 #include "src/utils.hxx"
 #include "src/point_generator.hxx"
 
-// 18.6855s sort 40M points
-// 4.4306s sort 10M points
-// 2.15396s sort 5M points
-// 0.395528s sort 1M points
+// 18.6855s algo 40M points
+// 4.4306s algo 10M points
+// 2.15396s algo 5M points
+// 0.395528s algo 1M points
 
 // #define PRE_DISTRIBUTED
 

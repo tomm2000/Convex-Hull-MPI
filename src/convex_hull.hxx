@@ -4,6 +4,7 @@
 #include <vector>
 #include <math.h>
 #include <omp.h>
+#include <thread>
 #include "mpi.h"
 #include "point.hxx"
 #include "graham_scan.hxx"

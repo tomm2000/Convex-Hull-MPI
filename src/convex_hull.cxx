@@ -31,40 +31,34 @@ void convex_hull_parallel(
 
   vector<Point> mergedHull = vector<Point>();
 
-  // run the algorithm in parallel using OpenMP
   #pragma omp parallel num_threads(4)
   {
-    vector<Point> localHull = vector<Point>();
-
-    #pragma omp single
-    {
-      timer->start("calculation");
-    }
-
     int numThreads = omp_get_num_threads();
     int threadId = omp_get_thread_num();
+    
+    size_t numPointsPerThread = numPoints / numThreads;
+    size_t start = threadId * numPointsPerThread;
 
-    size_t start = threadId * numPoints / numThreads;
-    size_t end = (threadId + 1) * numPoints / numThreads;
-
-    if (threadId == numThreads - 1) { end = numPoints; }
-
-    printf("Thread %d has points %s and %s\n", threadId, points[start].toString().c_str(), points[end - 1].toString().c_str());
-
-    convex_hull(points + start, end - start, localHull, algorithm, timer);
-
-    #pragma omp single
-    {
-      timer->stop("calculation");
+    if (threadId == numThreads - 1) {
+      numPointsPerThread = numPoints - start;
     }
 
-    #pragma omp critical
-    {
-      mergedHull.insert(mergedHull.end(), localHull.begin(), localHull.end());
-    }
+    // NOTE: qui bisognerebbe usare graham_scan, uso mergeSort per semplificare l'esempio
+    // in ogni caso, graham_scan chiama mergeSort internamente sullo stesso array
+    // graham_scan(threadPoints, numPointsPerThread, localHull, timer);
+
+    Point *threadPoints = new Point[numPointsPerThread];
+    memcpy(threadPoints, points + start, numPointsPerThread * sizeof(Point));
+    mergeSort(threadPoints, 1, numPointsPerThread - 1, points[0]);
+
+    // NOTE: al posto di fare copie dei punti, si potrebbe passare l'array originale
+    // mergeSort(points + start, 1, numPointsPerThread - 1, points[0]);
+
+    // NOTE: qui ci vorrebbe una sezione critica che fa il merge dei risultati
+    // anche questa tralasciata per semplificare l'esempio
   }
-
-  timer->printTimer("calculation");
+  
+  TIMERSTOP(graham_scan);
 
   hull = vector<Point>();
 }
