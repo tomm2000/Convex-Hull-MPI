@@ -49,16 +49,24 @@ string readArg(int argc, char *argv[], string argName, string defaultValue) {
 }
 
 
+// bool comparePoints(Point a, Point b, Point pivot) {
+//   Orientation o = orientation(pivot, a, b);
+//   if (o == Orientation::COLLINEAR) {
+//     return distSq(pivot, a) < distSq(pivot, b);
+//   }
+
+//   return o == Orientation::COUNTERCLOCKWISE;
+// }
+
 bool comparePoints(Point a, Point b, Point pivot) {
-  Orientation o = orientation(pivot, a, b);
-  if (o == Orientation::COLLINEAR) {
+  int o = orientation(pivot, a, b);
+  if (o == 0) {
     return distSq(pivot, a) < distSq(pivot, b);
   }
 
-  return o == Orientation::COUNTERCLOCKWISE;
+  return o == 2;
 }
 
-// template <typename Comparator>
 void merge(Point points[], size_t l, size_t m, size_t r, Point pivot) {
   size_t i, j, k;
   size_t n1 = m - l + 1;
@@ -106,7 +114,6 @@ void merge(Point points[], size_t l, size_t m, size_t r, Point pivot) {
   }
 }
 
-// template <typename Comparator>
 void mergeSort(Point points[], size_t l, size_t r, Point pivot) {
   if (l < r) {
     // Same as (l+r)/2, but avoids overflow for large l and r

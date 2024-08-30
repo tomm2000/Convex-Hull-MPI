@@ -12,13 +12,7 @@ struct Point {
   std::string toString();
 };
 
-enum class Orientation {
-  COLLINEAR = 0,
-  CLOCKWISE = 1,
-  COUNTERCLOCKWISE = 2
-};
-
-Orientation orientation(Point p, Point q, Point r);
+int orientation(Point p, Point q, Point r);
 
 long distSq(Point p1, Point p2);
 

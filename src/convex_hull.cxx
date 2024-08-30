@@ -31,8 +31,11 @@ void convex_hull_parallel(
 
   vector<Point> mergedHull = vector<Point>();
 
+  timer->start("algo");
+
   #pragma omp parallel num_threads(4)
   {
+
     int numThreads = omp_get_num_threads();
     int threadId = omp_get_thread_num();
     
@@ -47,16 +50,19 @@ void convex_hull_parallel(
     // in ogni caso, graham_scan chiama mergeSort internamente sullo stesso array
     // graham_scan(threadPoints, numPointsPerThread, localHull, timer);
 
-    Point *threadPoints = new Point[numPointsPerThread];
-    memcpy(threadPoints, points + start, numPointsPerThread * sizeof(Point));
-    mergeSort(threadPoints, 1, numPointsPerThread - 1, points[0]);
+    // Point *threadPoints = new Point[numPointsPerThread];
+    // memcpy(threadPoints, points + start, numPointsPerThread * sizeof(Point));
+    // mergeSort(threadPoints, 1, numPointsPerThread - 1, points[0]);
 
     // NOTE: al posto di fare copie dei punti, si potrebbe passare l'array originale
-    // mergeSort(points + start, 1, numPointsPerThread - 1, points[0]);
+    mergeSort(points + start, 1, numPointsPerThread - 1, points[0]);
 
     // NOTE: qui ci vorrebbe una sezione critica che fa il merge dei risultati
     // anche questa tralasciata per semplificare l'esempio
   }
+
+  timer->stop("algo");
+  timer->printTimer("algo");
 
   hull = vector<Point>();
 }

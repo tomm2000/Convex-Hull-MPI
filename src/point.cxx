@@ -17,11 +17,11 @@ string Point::toString() {
 // 0 --> p, q and r are collinear
 // 1 --> Clockwise
 // 2 --> Counterclockwise
-Orientation orientation(Point p, Point q, Point r) {
+int orientation(Point p, Point q, Point r) {
   long val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
 
-  if (val == 0) return Orientation::COLLINEAR;  // collinear
-  return (val > 0)? Orientation::CLOCKWISE: Orientation::COUNTERCLOCKWISE; // clock or counterclock wise
+  if (val == 0) return 0;  // collinear
+  return (val > 0)? 1 : 2; // clock or counterclock wise
 }
 
 void swap(Point &p1, Point &p2) {

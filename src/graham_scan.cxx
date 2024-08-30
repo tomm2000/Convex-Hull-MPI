@@ -47,7 +47,7 @@ void graham_scan(
     // while (i < n-1 && orientation(p0, points[i],
     //                             points[i+1]) == 0)
     //   i++;
-    while (i < numPoints - 1 && orientation(points[0], points[i], points[i + 1]) == Orientation::COLLINEAR) {
+    while (i < numPoints - 1 && orientation(points[0], points[i], points[i + 1]) == 0) {
       i++;
     }
 
@@ -69,7 +69,7 @@ void graham_scan(
   // Process remaining n-3 points
   for (size_t i = 3; i < m; i++) {
     // Keep removing top while the angle formed by points next-to-top, top, and points[i] makes a non-left turn
-    while (orientation(nextToTop(s), s.top(), points[i]) != Orientation::COUNTERCLOCKWISE) {
+    while (orientation(nextToTop(s), s.top(), points[i]) != 2) {
       s.pop();
     }
     s.push(points[i]);
