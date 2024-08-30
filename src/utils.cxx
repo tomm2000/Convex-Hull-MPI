@@ -48,17 +48,19 @@ string readArg(int argc, char *argv[], string argName, string defaultValue) {
   return defaultValue;  
 }
 
+// To find orientation of ordered triplet (p, q, r).
+// The function returns following values
+// 0 --> p, q and r are collinear
+// 1 --> Clockwise
+// 2 --> Counterclockwise
+int orientation(Point &p, Point &q, Point &r) {
+  long val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
 
-// bool comparePoints(Point a, Point b, Point pivot) {
-//   Orientation o = orientation(pivot, a, b);
-//   if (o == Orientation::COLLINEAR) {
-//     return distSq(pivot, a) < distSq(pivot, b);
-//   }
+  if (val == 0) return 0;  // collinear
+  return (val > 0)? 1 : 2; // clock or counterclock wise
+}
 
-//   return o == Orientation::COUNTERCLOCKWISE;
-// }
-
-bool comparePoints(Point a, Point b, Point pivot) {
+bool comparePoints(Point &a, Point &b, Point &pivot) {
   int o = orientation(pivot, a, b);
   if (o == 0) {
     return distSq(pivot, a) < distSq(pivot, b);
@@ -67,13 +69,14 @@ bool comparePoints(Point a, Point b, Point pivot) {
   return o == 2;
 }
 
-void merge(Point points[], size_t l, size_t m, size_t r, Point pivot) {
+long distSq(Point &p1, Point &p2) {
+  return (p1.x - p2.x)*(p1.x - p2.x) + (p1.y - p2.y)*(p1.y - p2.y);
+}
+
+void merge(Point points[], size_t l, size_t m, size_t r, Point &pivot, Point L[], Point R[]) {
   size_t i, j, k;
   size_t n1 = m - l + 1;
   size_t n2 = r - m;
-
-  // create temp arrays
-  Point *L = new Point[n1], *R = new Point[n2];
 
   // Copy data to temp arrays L[] and R[]
   for (i = 0; i < n1; i++) {
@@ -114,15 +117,22 @@ void merge(Point points[], size_t l, size_t m, size_t r, Point pivot) {
   }
 }
 
-void mergeSort(Point points[], size_t l, size_t r, Point pivot) {
+void mergeSort(Point points[], size_t l, size_t r, Point &pivot, Point L[], Point R[]) {
   if (l < r) {
     // Same as (l+r)/2, but avoids overflow for large l and r
     size_t m = l + (r - l) / 2;
 
     // Sort first and second halves
-    mergeSort(points, l, m, pivot);
-    mergeSort(points, m + 1, r, pivot);
+    mergeSort(points, l, m, pivot, L, R);
+    mergeSort(points, m + 1, r, pivot, L, R);
 
-    merge(points, l, m, r, pivot);
+    merge(points, l, m, r, pivot, L, R);
   }
+}
+
+void mergeSort(Point points[], size_t numPoints, Point &pivot) {
+  Point *L = new Point[numPoints];
+  Point *R = new Point[numPoints];
+  
+  mergeSort(points, 0, numPoints - 1, pivot, L, R);
 }

@@ -32,25 +32,25 @@ void convex_hull_parallel(
   Timer *timer = nullptr
 );
 
-// void convex_hull_distributed(
-//   MPI_Datatype PointType,
-//   MPI_Comm comm,
-//   Point points[], // points is only used by the master process
-//   size_t numPoints,
-//   std::vector<Point> &hull,
-//   ConvexHullAlgorithm algorithm = ConvexHullAlgorithm::GRAHAM_SCAN,
-//   Timer *timer = nullptr,
-//   bool hybrid = false
-// );
+void convex_hull_distributed(
+  MPI_Datatype PointType,
+  MPI_Comm comm,
+  Point points[], // points is only used by the master process
+  size_t numPoints,
+  std::vector<Point> &hull,
+  ConvexHullAlgorithm algorithm = ConvexHullAlgorithm::GRAHAM_SCAN,
+  Timer *timer = nullptr,
+  bool hybrid = false
+);
 
-// void convex_hull_predistributed(
-//   MPI_Datatype PointType,
-//   MPI_Comm comm,
-//   Point points[],
-//   size_t numPoints,
-//   std::vector<Point> &hull,
-//   ConvexHullAlgorithm algorithm = ConvexHullAlgorithm::GRAHAM_SCAN,
-//   Timer *timer = nullptr,
-//   bool hybrid = false
-// );
+void convex_hull_predistributed(
+  MPI_Datatype PointType,
+  MPI_Comm comm,
+  Point points[],
+  size_t numPoints,
+  std::vector<Point> &hull,
+  ConvexHullAlgorithm algorithm = ConvexHullAlgorithm::GRAHAM_SCAN,
+  Timer *timer = nullptr,
+  bool hybrid = false
+);
 #endif

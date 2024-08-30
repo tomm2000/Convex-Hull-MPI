@@ -2,9 +2,7 @@
 
 using namespace std;
 
-long distSq(Point p1, Point p2) {
-  return (p1.x - p2.x)*(p1.x - p2.x) + (p1.y - p2.y)*(p1.y - p2.y);
-}
+
 
 string Point::toString() {
   stringstream ss;
@@ -12,17 +10,7 @@ string Point::toString() {
   return ss.str();
 }
 
-// To find orientation of ordered triplet (p, q, r).
-// The function returns following values
-// 0 --> p, q and r are collinear
-// 1 --> Clockwise
-// 2 --> Counterclockwise
-int orientation(Point p, Point q, Point r) {
-  long val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
 
-  if (val == 0) return 0;  // collinear
-  return (val > 0)? 1 : 2; // clock or counterclock wise
-}
 
 void swap(Point &p1, Point &p2) {
   Point temp = p1;
