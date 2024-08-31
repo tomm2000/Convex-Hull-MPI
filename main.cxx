@@ -8,7 +8,7 @@
 #include "src/utils.hxx"
 #include "src/point_generator.hxx"
 
-// #define PRE_DISTRIBUTED
+#define PRE_DISTRIBUTED
 
 int main(int argc, char *argv[]) {
   #pragma region Initialization
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 
   Timer timer = Timer();
   size_t numPointsTotal = stol(readArg(argc, argv, "npoints", "1000000"));
-  int seed = stoi(readArg(argc, argv, "seed", "0"));
+  uint seed = stoi(readArg(argc, argv, "seed", "0"));
   bool useHybrid = readArg(argc, argv, "hybrid", "false") == "true";
   
   if (seed == 0) { seed = time(NULL); }
@@ -58,8 +58,7 @@ int main(int argc, char *argv[]) {
   seed += rank * 2124;
 
   points = new Point[numPointsPerProcess];
-  // generate_points(numPointsPerProcess, points, PointGeneratorType::CIRCLE, seed);
-  generate_points_parallel(numPointsPerProcess, points, PointGeneratorType::CIRCLE, seed);
+  generate_points(numPointsPerProcess, points, PointGeneratorType::CIRCLE, seed);
 
   if (rank == 0) {
     timer.stop("points");
@@ -88,10 +87,13 @@ int main(int argc, char *argv[]) {
   );
   #else
   if (rank == 0) {
+    timer.start("points");
     points = new Point[numPointsTotal];
 
     cout << "Generating " << numPointsTotal << " points on master process" << endl;
-    generate_points_parallel(numPointsTotal, points, PointGeneratorType::CIRCLE, seed);
+    generate_points(numPointsTotal, points, PointGeneratorType::CIRCLE, seed);
+    timer.stop("points");
+    timer.printTimer("points");
   }
 
   MPI_Barrier(MPI_COMM_WORLD);
@@ -102,7 +104,16 @@ int main(int argc, char *argv[]) {
     timer.start("final");
   }
 
-  convex_hull_distributed(PointType, MPI_COMM_WORLD, points, numPointsTotal, hull, ConvexHullAlgorithm::GRAHAM_SCAN, &timer, useHybrid);
+  convex_hull_distributed(
+    PointType,
+    MPI_COMM_WORLD,
+    points,
+    numPointsTotal,
+    hull,
+    ConvexHullAlgorithm::GRAHAM_SCAN,
+    &timer,
+    useHybrid
+  );
   #endif
 
   if (rank == 0) {
@@ -114,8 +125,8 @@ int main(int argc, char *argv[]) {
     printf("size: %lu\n", hull.size());
   }
 
-  save_points_binary(points, numPointsPerProcess, "results/points.bin");
-  save_points_ascii(hull, "results/hull.txt");
+  // save_points_binary(points, numPointsPerProcess, "results/points.bin");
+  // save_points_ascii(hull, "results/hull.txt");
   MPI_Finalize();
 
   return 0;

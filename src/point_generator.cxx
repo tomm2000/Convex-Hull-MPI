@@ -16,36 +16,11 @@ void generate_points(
 
   int radius = min(abs(corner1.x - corner2.x), abs(corner1.y - corner2.y)) / 2;
   for (size_t i = 0; i < numPoints; i++) {
-    nextPointFast(type, &points[i], radius, seed48);
+    nextPoint(type, &points[i], radius, seed48);
   }
 }
 
-void generate_points_parallel(
-    size_t numPoints,
-    Point *points,
-    PointGeneratorType type,
-    ushort seed,
-    Point corner1,
-    Point corner2) {
-  
-  #pragma omp parallel
-  {
-    int tnum = omp_get_thread_num();
-    ushort seed48[3];
-    seed48[0] = seed + tnum * 2124;
-    seed48[1] = seed + tnum * 2124;
-    seed48[2] = seed + tnum * 2124;
-    
-    int radius = min(abs(corner1.x - corner2.x), abs(corner1.y - corner2.y)) / 2;
-
-    #pragma omp for
-    for (size_t i = 0; i < numPoints; i++) {
-      nextPointFast(type, &points[i], radius, seed48);
-    }
-  }
-}
-
-void nextPointFast(PointGeneratorType type, Point *point, int radius, ushort seed48[3]) {
+void nextPoint(PointGeneratorType type, Point *point, int radius, ushort seed48[3]) {
   if (type == PointGeneratorType::CIRCLE) {
     // use erand48 instead of rand
     double angle = erand48(seed48) * TWO_PI;
@@ -56,24 +31,6 @@ void nextPointFast(PointGeneratorType type, Point *point, int radius, ushort see
   } else {
     point->x = 0;
     point->y = 0;
-  }
-}
-
-Point nextPoint(PointGeneratorType type, Point corner1, Point corner2, ushort seed48[3]) {
-  // TODO: implement other point generation types, and make cleaner
-  if (type == PointGeneratorType::CIRCLE) {
-    int radius = min(abs(corner1.x - corner2.x), abs(corner1.y - corner2.y)) / 2;
-
-    // use erand48 instead of rand
-    double angle = erand48(seed48) * TWO_PI;
-    double r = sqrt(erand48(seed48)) * radius;
-
-    long x = r * cos(angle);
-    long y = r * sin(angle);
-
-    return {x, y};
-  } else {
-    return {0, 0};
   }
 }
 

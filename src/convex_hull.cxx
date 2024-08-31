@@ -169,6 +169,9 @@ void convex_hull_predistributed(
       timer->stop("communication");
     }
 
+    printf("Master: Merged hull size: %lu\n", mergedHull.size());
+    fflush(stdout);
+
     timer->start("calculation");
     convex_hull(mergedHull.data(), mergedHull.size(), hull, algorithm, timer);
     timer->stop("calculation");
