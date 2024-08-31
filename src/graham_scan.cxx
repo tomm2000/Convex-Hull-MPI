@@ -33,7 +33,8 @@ void graham_scan(
   Point pivot = points[0];
 
   // sort n-1 points with respect to the first point. A point p1 comes before p2 in sorted output if p2 has larger polar angle (in counterclockwise direction) than p1
-  mergeSort(points, 1, numPoints - 1, pivot);
+  // mergeSort(points, 1, numPoints - 1, pivot);
+  mergeSort(points + 1, numPoints - 1, pivot);
 
   // If two or more points make same angle with p0,
   // Remove all but the one that is farthest from p0
@@ -69,8 +70,11 @@ void graham_scan(
   // Process remaining n-3 points
   for (size_t i = 3; i < m; i++) {
     // Keep removing top while the angle formed by points next-to-top, top, and points[i] makes a non-left turn
-    while (orientation(nextToTop(s), s.top(), points[i]) != 2) {
+    Point next = nextToTop(s);
+    
+    while (orientation(next, s.top(), points[i]) != 2) {
       s.pop();
+      next = nextToTop(s);
     }
     s.push(points[i]);
   }

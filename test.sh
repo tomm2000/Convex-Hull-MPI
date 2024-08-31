@@ -1,18 +1,18 @@
 #!/bin/bash
 #SBATCH --job-name=openmp_test       # Job name
 #SBATCH --output=output/output_%j.txt       # Output file (%j expands to jobId)
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
-#SBATCH --time=00:10:00              # Time limit hh:mm:ss
+#SBATCH --nodes=8
+#SBATCH --ntasks=8
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=35
+#SBATCH --time=00:20:00              # Time limit hh:mm:ss
 #SBATCH --partition=broadwell        # Partition name
 
-# Load necessary modules (if any)
-# module load gcc
-
 # Export the number of threads to be used by OpenMP
-export OMP_NUM_THREADS=16
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
 # Run the OpenMP program
 make clean
 make
-build/main npoints=40000000
+# build/main npoints=10000000
+srun -pmix=mpi build/main npoints=4000000000 hybrid=true seed=1

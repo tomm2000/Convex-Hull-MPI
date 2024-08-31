@@ -12,9 +12,7 @@ struct Point {
   std::string toString();
 };
 
-int orientation(Point p, Point q, Point r);
 
-long distSq(Point p1, Point p2);
 
 void swap(Point &p1, Point &p2);
 
