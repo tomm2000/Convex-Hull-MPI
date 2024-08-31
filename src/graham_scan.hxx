@@ -7,13 +7,14 @@
 #include <algorithm>
 #include "point.hxx"
 #include "utils.hxx"
+#include "omp.h"
 
 // enum for convex hull algorithm
 void graham_scan(
   Point *points,
   size_t numPoints,
   std::vector<Point> &hull,
-  Timer &timer = Timer()
+  Timer *timer = nullptr
 );
 
 #endif

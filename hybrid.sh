@@ -3,6 +3,7 @@
 #SBATCH --output=output/output_%j.txt       # Output file (%j expands to jobId)
 #SBATCH --nodes=8
 #SBATCH --ntasks=8
+#SBATCH --nodelist=broadwell-[015-022]
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=35
 #SBATCH --time=00:20:00              # Time limit hh:mm:ss
@@ -11,8 +12,7 @@
 # Export the number of threads to be used by OpenMP
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
-# Run the OpenMP program
 make clean
 make
-# build/main npoints=10000000
-srun -pmix=mpi build/main npoints=4000000000 hybrid=true seed=1
+srun -pmix=mpi build/main npoints=100000000 hybrid=true seed=1
+

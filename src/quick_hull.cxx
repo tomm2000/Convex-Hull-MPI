@@ -38,8 +38,10 @@ void quick_hull(
   Point *points,
   size_t numPoints,
   vector<Point> &hull,
-  Timer &timer
+  Timer *timer
 ) {
+  if (timer == nullptr) { timer = new Timer(); }
+
   // 1. Find the leftmost and rightmost points
   Point leftmost, rightmost = points[0];
 
@@ -84,8 +86,10 @@ void quick_hull_recursive(
   Point a, Point b,
   vector<Point> &hull,
   int iteration,
-  Timer &timer
+  Timer *timer
 ) {
+  if (timer == nullptr) { timer = new Timer(); }
+  
   // 0. if there are no points, return
   if (points.size() == 0) { return; }
 

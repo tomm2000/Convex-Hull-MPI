@@ -31,12 +31,5 @@ class Timer {
 
 string readArg(int argc, char* argv[], string argName, string defaultValue = "");
 
-bool comparePoints(Point &a, Point &b, Point &pivot);
-int orientation(Point &p, Point &q, Point &r);
-long distSq(Point &p1, Point &p2);
-
-
-void merge(Point *points, size_t l, size_t m, size_t r, Point &pivot, Point L[], Point R[]);
-void mergeSort(Point points[], size_t l, size_t r, Point &pivot, Point L[], Point R[]);
-void mergeSort(Point points[], size_t numPoints, Point &pivot);
+int orientation(Point a, Point b, Point c);
 #endif

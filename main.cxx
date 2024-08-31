@@ -46,14 +46,16 @@ int main(int argc, char *argv[]) {
 
   #ifdef PRE_DISTRIBUTED
   size_t numPointsPerProcess = numPointsTotal / numP;
-  if (rank == numP - 1) { numPointsPerProcess += numPointsTotal % numP; }
+  if (rank == numP - 1) {
+    numPointsPerProcess += numPointsTotal % numP;
+  }
 
   if (rank == 0) {
     cout << "Generating ~" << numPointsPerProcess << " points per process on " << numP << " processes" << endl;
     timer.start("points");
   }
 
-  seed += rank * numPointsPerProcess;
+  seed += rank * 2124;
 
   points = new Point[numPointsPerProcess];
   generate_points(numPointsPerProcess, points, PointGeneratorType::CIRCLE, seed);
@@ -73,7 +75,16 @@ int main(int argc, char *argv[]) {
     timer.start("final");
   }
 
-  convex_hull_predistributed(PointType, MPI_COMM_WORLD, points, numPointsPerProcess, hull, ConvexHullAlgorithm::GRAHAM_SCAN, &timer, useHybrid);
+  convex_hull_predistributed(
+    PointType,
+    MPI_COMM_WORLD,
+    points,
+    numPointsPerProcess,
+    hull,
+    ConvexHullAlgorithm::GRAHAM_SCAN,
+    &timer,
+    useHybrid
+  );
   #else
   // if (rank == 0) {
   //   points = new Point[numPointsTotal];

@@ -3,6 +3,7 @@
 
 #include "point.hxx"
 #include "utils.hxx"
+#include <cmath>
 #include <vector>
 
 using namespace std;
@@ -27,7 +28,7 @@ void quick_hull(
   Point *points,
   size_t numPoints,
   vector<Point> &hull,
-  Timer &timer = Timer()
+  Timer *timer = nullptr
 );
 
 void quick_hull_recursive(
@@ -35,7 +36,7 @@ void quick_hull_recursive(
   Point a, Point b,
   vector<Point> &hull,
   int iteration,
-  Timer &timer = Timer()
+  Timer *timer = nullptr
 );
 
 #endif // QUICK_HULL_H

@@ -8,6 +8,7 @@
 #include "mpi.h"
 #include "point.hxx"
 #include "graham_scan.hxx"
+#include "quick_hull.hxx"
 #include "hpc_helpers.hpp" 
 #include "utils.hxx"
 
@@ -21,7 +22,7 @@ void convex_hull(
   size_t numPoints,
   std::vector<Point> &hull,
   ConvexHullAlgorithm algorithm = ConvexHullAlgorithm::GRAHAM_SCAN,
-  Timer &timer = Timer()
+  Timer *timer = nullptr
 );
 
 void convex_hull_parallel(
@@ -29,7 +30,7 @@ void convex_hull_parallel(
   size_t numPoints,
   std::vector<Point> &hull,
   ConvexHullAlgorithm algorithm = ConvexHullAlgorithm::GRAHAM_SCAN,
-  Timer &timer = Timer()
+  Timer *timer = nullptr
 );
 
 void convex_hull_distributed(
@@ -39,7 +40,7 @@ void convex_hull_distributed(
   size_t numPoints,
   std::vector<Point> &hull,
   ConvexHullAlgorithm algorithm = ConvexHullAlgorithm::GRAHAM_SCAN,
-  Timer &timer = Timer(),
+  Timer *timer = nullptr,
   bool hybrid = false
 );
 
@@ -50,7 +51,7 @@ void convex_hull_predistributed(
   size_t numPoints,
   std::vector<Point> &hull,
   ConvexHullAlgorithm algorithm = ConvexHullAlgorithm::GRAHAM_SCAN,
-  Timer &timer = Timer(),
+  Timer *timer = nullptr,
   bool hybrid = false
 );
 #endif
