@@ -9,6 +9,8 @@
 #include "src/point_generator.hxx"
 
 #define PRE_DISTRIBUTED
+// #define CENTRALIZED
+// #define FILE_IO
 
 int main(int argc, char *argv[]) {
   #pragma region Initialization
@@ -20,10 +22,6 @@ int main(int argc, char *argv[]) {
   MPI_Comm_size(MPI_COMM_WORLD, &numP);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  if (rank == 0) {
-    printf("Number of MPI tasks: %d\n", numP);
-  }
-
   MPI_Datatype PointType = registerPointType();
   #pragma endregion
 
@@ -33,13 +31,9 @@ int main(int argc, char *argv[]) {
   bool useHybrid = readArg(argc, argv, "hybrid", "false") == "true";
   
   if (seed == 0) { seed = time(NULL); }
-  int memUsage = estimateMemoryUsage(numPointsTotal);
 
   if (rank == 0) {
-    cout << "Use hybrid: " << useHybrid << endl;
-    cout << "Seed: " << seed << endl;
-    cout << "Estimated memory usage: " << memUsage << " MB" << endl;
-    cout << "Total number of points: " << numPointsTotal << endl;
+    printf("MPI tasks: %d | Use hybrid: %s | Seed: %d | Total points: %lu \n", numP, useHybrid ? "true" : "false", seed, numPointsTotal);
   }
 
   Point *points;
@@ -51,7 +45,6 @@ int main(int argc, char *argv[]) {
   }
 
   if (rank == 0) {
-    cout << "Generating ~" << numPointsPerProcess << " points per process on " << numP << " processes" << endl;
     timer.start("points");
   }
 
@@ -62,8 +55,6 @@ int main(int argc, char *argv[]) {
 
   if (rank == 0) {
     timer.stop("points");
-    timer.printTimer("points");
-    cout << "Generated " << numPointsPerProcess << " points on master process" << endl;
   }
 
 
@@ -81,11 +72,14 @@ int main(int argc, char *argv[]) {
     points,
     numPointsPerProcess,
     hull,
-    ConvexHullAlgorithm::QUICK_HULL,
+    ConvexHullAlgorithm::GRAHAM_SCAN,
     &timer,
     useHybrid
   );
-  #else
+
+  #endif
+
+  #ifdef CENTRALIZED
   if (rank == 0) {
     timer.start("points");
     points = new Point[numPointsTotal];
@@ -94,6 +88,7 @@ int main(int argc, char *argv[]) {
     generate_points(numPointsTotal, points, PointGeneratorType::CIRCLE, seed);
     timer.stop("points");
     timer.printTimer("points");
+    fflush(stdout);
   }
 
   MPI_Barrier(MPI_COMM_WORLD);
@@ -116,12 +111,83 @@ int main(int argc, char *argv[]) {
   );
   #endif
 
+  #ifdef FILE_IO
+  timer.start("points");
+
+  MPI_File fh;
+  MPI_File_open(MPI_COMM_WORLD, "results/points.bin", MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
+
+  // first (|int| bytes = 4) bytes is the number of bytes used by size_t
+  int size_t_bytes;
+  MPI_File_read_at(fh, 0, &size_t_bytes, 1, MPI_INT, MPI_STATUS_IGNORE);
+
+  printf("size_t_bytes: %d\n", size_t_bytes);
+  fflush(stdout);
+
+  // second (|int| bytes = 4) is the size of each point
+  int point_size;
+  MPI_File_read_at(fh, sizeof(int), &point_size, 1, MPI_INT, MPI_STATUS_IGNORE);
+
+  printf("point_size: %d\n", point_size);
+  fflush(stdout);
+
+  // write the number of points (|size_t| bytes)
+  size_t numPoints;
+  MPI_File_read_at(fh, sizeof(int) * 2, &numPoints, 1, MPI_UNSIGNED_LONG_LONG, MPI_STATUS_IGNORE);
+
+  printf("numPoints: %lu\n", numPoints);
+  fflush(stdout);
+
+  size_t pointsPerProcess = ceil(numPoints / numP);
+  size_t start = rank * pointsPerProcess;
+  size_t end = start + pointsPerProcess;
+  if (end > numPoints) { end = numPoints; }
+  if (rank == numP - 1) { end = numPoints; }
+
+  printf("rank: %d | start: %lu | end: %lu\n", rank, start, end);
+  fflush(stdout);
+
+  points = new Point[pointsPerProcess];
+  MPI_File_read_at(
+    fh,
+    sizeof(int) * 2 + size_t_bytes + start * point_size,
+    points,
+    pointsPerProcess,
+    PointType,
+    MPI_STATUS_IGNORE
+  );
+
+  printf(points[0].toString().c_str());
+  fflush(stdout);
+
+  MPI_File_close(&fh);
+  timer.stop("points");
+
+  std::vector<Point> hull;
+
+  if (rank == 0) {
+    timer.start("final");
+  }
+
+  convex_hull_predistributed(
+    PointType,
+    MPI_COMM_WORLD,
+    points,
+    pointsPerProcess,
+    hull,
+    ConvexHullAlgorithm::GRAHAM_SCAN,
+    &timer,
+    useHybrid
+  );
+  #endif
+
   if (rank == 0) {
     timer.stop("final");
-    printf("========================================\n");
+    printf("--------\n");
     timer.printTimer("calculation");
     timer.printTimer("communication");
     timer.printTimer("final");
+    timer.printTimer("points");
     printf("size: %lu\n", hull.size());
   }
 

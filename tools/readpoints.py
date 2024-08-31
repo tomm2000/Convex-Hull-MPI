@@ -16,8 +16,16 @@ with open('results/points.txt', 'w') as output_file:
     num_points = int.from_bytes(bytes[8:8 + size_num_points], 'little')
     print("num_points: ", num_points)
 
+    num_points = 0;
+
     for i in range(8 + size_num_points, len(bytes), size_point):
       x = int.from_bytes(bytes[i:i + size_point // 2], 'little', signed=True)
       y = int.from_bytes(bytes[i + size_point // 2:i + size_point], 'little', signed=True)
 
-      output_file.write(f"{x} {y}\n")
+      # output_file.write(f"{x} {y}\n")
+
+      print(f"{x} {y}")
+
+      num_points += 1
+      if num_points > 100:
+        break

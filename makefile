@@ -2,7 +2,7 @@
 CXX = mpicxx
 
 # Compiler flags
-CXXFLAGS = -O2 -fopenmp
+CXXFLAGS = -O3 -fopenmp
 
 # Directories
 MAIN_DIR = .

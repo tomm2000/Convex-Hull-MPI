@@ -1,13 +1,27 @@
 #!/bin/bash
-#SBATCH --job-name=progetto_scpd       # Job name
-#SBATCH --output=output/output_%j.txt       # Output file (%j expands to jobId)
-#SBATCH --nodes=12
-#SBATCH --ntasks=432
-#SBATCH --nodelist=broadwell-[015-022]
+#SBATCH --job-name=progetto_scpd
+#SBATCH --output=output/output_%j.txt
+#SBATCH --nodes=48
+#SBATCH --ntasks=1728
+#SBATCH --nodelist=broadwell-[015-064]
 #SBATCH --ntasks-per-node=36
-#SBATCH --time=00:20:00              # Time limit hh:mm:ss
-#SBATCH --partition=broadwell        # Partition name
+#SBATCH --time=00:10:00
+#SBATCH --partition=broadwell
 
-make clean
+# npoints variable to be used by the program
+export npoints=2000000000
+
+# make clean
 make
-srun -pmix=mpi build/main npoints=2000000000 hybrid=false seed=1
+# run the experiment 5 times, print "====================" to separate the results
+srun -pmix=mpi build/main npoints=$npoints seed=1 hybrid=false
+echo "===================="
+srun -pmix=mpi build/main npoints=$npoints seed=2 hybrid=false
+echo "===================="
+srun -pmix=mpi build/main npoints=$npoints seed=3 hybrid=false
+echo "===================="
+srun -pmix=mpi build/main npoints=$npoints seed=4 hybrid=false
+echo "===================="
+srun -pmix=mpi build/main npoints=$npoints seed=5 hybrid=false
+
+

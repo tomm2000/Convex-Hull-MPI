@@ -8,23 +8,22 @@ void generate_points(
     size_t numPoints,
     Point *points,
     PointGeneratorType type,
-    ushort seed,
+    int seed,
     Point corner1,
     Point corner2) {
   
-  ushort seed48[3] = {seed, seed, seed};
+  srand(seed);
 
   int radius = min(abs(corner1.x - corner2.x), abs(corner1.y - corner2.y)) / 2;
   for (size_t i = 0; i < numPoints; i++) {
-    nextPoint(type, &points[i], radius, seed48);
+    nextPoint(type, &points[i], radius);
   }
 }
 
-void nextPoint(PointGeneratorType type, Point *point, int radius, ushort seed48[3]) {
+void nextPoint(PointGeneratorType type, Point *point, int radius) {
   if (type == PointGeneratorType::CIRCLE) {
-    // use erand48 instead of rand
-    double angle = erand48(seed48) * TWO_PI;
-    double r = std::sqrt(erand48(seed48)) * radius;
+    double r = std::sqrt(rand() / (double)RAND_MAX) * radius;
+    double angle = (rand() / (double)RAND_MAX) * TWO_PI;
 
     point->x = r * std::cos(angle);
     point->y = r * std::sin(angle);

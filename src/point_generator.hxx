@@ -27,12 +27,12 @@ void generate_points(
   size_t numPoints,
   Point *points,
   PointGeneratorType type,
-  ushort seed = time(NULL),
+  int seed = time(NULL),
   Point corner1 = {1000000, 1000000},
   Point corner2 = {-1000000, -1000000}
 );
 
-void nextPoint(PointGeneratorType type, Point *point, int radius, ushort seed48[3]);
+void nextPoint(PointGeneratorType type, Point *point, int radius);
 
 void save_points_binary(std::vector<Point> &points, std::string filename);
 void save_points_binary(Point *points, int numPoints, std::string filename);

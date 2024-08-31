@@ -89,6 +89,8 @@ void convex_hull_distributed(
   Point *localPoints = nullptr;
   size_t localNumPoints = 0;
 
+  timer->start("communication");
+  
   // 1. send the respective points to each process
   if (rank == 0) {
     for (int i = 0; i < numP; i++) {
@@ -104,20 +106,18 @@ void convex_hull_distributed(
         localPoints = new Point[localNumPoints];
         localPoints = points + start;
       } else {
-        timer->start("communication");
         MPI_Send(&count, 1, MPI_UNSIGNED_LONG_LONG, i, 0, comm);
         MPI_Send(points + start, count, PointType, i, 0, comm);
-        timer->stop("communication");
       }
     }
   } else {
-    timer->start("communication");
     MPI_Recv(&localNumPoints, 1, MPI_UNSIGNED_LONG_LONG, 0, 0, comm, MPI_STATUS_IGNORE);
 
     localPoints = new Point[localNumPoints];
     MPI_Recv(localPoints, localNumPoints, PointType, 0, 0, comm, MPI_STATUS_IGNORE);
-    timer->stop("communication");
   }
+
+  timer->stop("communication");
 
   if (rank == 0) {
     printf("Points have been distributed\n");
@@ -168,9 +168,6 @@ void convex_hull_predistributed(
       mergedHull.insert(mergedHull.end(), remoteHull, remoteHull + count);
       timer->stop("communication");
     }
-
-    printf("Master: Merged hull size: %lu\n", mergedHull.size());
-    fflush(stdout);
 
     timer->start("calculation");
     convex_hull(mergedHull.data(), mergedHull.size(), hull, algorithm, timer);
