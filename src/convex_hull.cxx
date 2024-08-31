@@ -118,6 +118,10 @@ void convex_hull_distributed(
     MPI_Recv(localPoints, localNumPoints, PointType, 0, 0, comm, MPI_STATUS_IGNORE);
     timer->stop("communication");
   }
+
+  if (rank == 0) {
+    printf("Points have been distributed\n");
+  }
   
   convex_hull_predistributed(PointType, comm, localPoints, localNumPoints, hull, algorithm, timer, hybrid);
 }

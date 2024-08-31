@@ -8,7 +8,7 @@
 #include "src/utils.hxx"
 #include "src/point_generator.hxx"
 
-#define PRE_DISTRIBUTED
+// #define PRE_DISTRIBUTED
 
 int main(int argc, char *argv[]) {
   #pragma region Initialization
@@ -87,23 +87,22 @@ int main(int argc, char *argv[]) {
     useHybrid
   );
   #else
-  // if (rank == 0) {
-  //   points = new Point[numPointsTotal];
+  if (rank == 0) {
+    points = new Point[numPointsTotal];
 
-  //   cout << "Generating " << numPointsTotal << " points on master process" << endl;
-  //   generate_points(numPointsTotal, points, PointGeneratorType::CIRCLE, seed);
-  // }
+    cout << "Generating " << numPointsTotal << " points on master process" << endl;
+    generate_points_parallel(numPointsTotal, points, PointGeneratorType::CIRCLE, seed);
+  }
 
-  // MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD);
 
-  // std::vector<Point> hull;
+  std::vector<Point> hull;
 
-  // if (rank == 0) {
-  //   timer.start("final");
-  // }
+  if (rank == 0) {
+    timer.start("final");
+  }
 
-  // // convex_hull_distributed(PointType, MPI_COMM_WORLD, points, numPointsTotal, hull, ConvexHullAlgorithm::GRAHAM_SCAN, &timer, useHybrid);
-  // convex_hull_parallel(points, numPointsTotal, hull, ConvexHullAlgorithm::GRAHAM_SCAN, &timer);
+  convex_hull_distributed(PointType, MPI_COMM_WORLD, points, numPointsTotal, hull, ConvexHullAlgorithm::GRAHAM_SCAN, &timer, useHybrid);
   #endif
 
   if (rank == 0) {
