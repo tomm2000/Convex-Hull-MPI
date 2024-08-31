@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
   #pragma endregion
 
   Timer timer = Timer();
-  size_t numPointsTotal = stol(readArg(argc, argv, "npoints", "10000000"));
+  size_t numPointsTotal = stol(readArg(argc, argv, "npoints", "1000000"));
   int seed = stoi(readArg(argc, argv, "seed", "0"));
   bool useHybrid = readArg(argc, argv, "hybrid", "false") == "true";
   
@@ -58,7 +58,8 @@ int main(int argc, char *argv[]) {
   seed += rank * 2124;
 
   points = new Point[numPointsPerProcess];
-  generate_points(numPointsPerProcess, points, PointGeneratorType::CIRCLE, seed);
+  // generate_points(numPointsPerProcess, points, PointGeneratorType::CIRCLE, seed);
+  generate_points_parallel(numPointsPerProcess, points, PointGeneratorType::CIRCLE, seed);
 
   if (rank == 0) {
     timer.stop("points");
@@ -81,7 +82,7 @@ int main(int argc, char *argv[]) {
     points,
     numPointsPerProcess,
     hull,
-    ConvexHullAlgorithm::GRAHAM_SCAN,
+    ConvexHullAlgorithm::QUICK_HULL,
     &timer,
     useHybrid
   );
@@ -114,8 +115,8 @@ int main(int argc, char *argv[]) {
     printf("size: %lu\n", hull.size());
   }
 
-  // save_points_binary(points, "results/points.bin");
-  // save_points_ascii(hull, "results/hull.txt");
+  save_points_binary(points, numPointsPerProcess, "results/points.bin");
+  save_points_ascii(hull, "results/hull.txt");
   MPI_Finalize();
 
   return 0;

@@ -32,6 +32,14 @@ void generate_points(
   Point corner2 = {-1000000, -1000000}
 );
 
+void generate_points_parallel(
+    size_t numPoints,
+    Point *points,
+    PointGeneratorType type,
+    ushort seed,
+    Point corner1 = {1000000, 1000000},
+    Point corner2 = {-1000000, -1000000});
+
 Point nextPoint(PointGeneratorType type, Point corner1, Point corner2, unsigned short seed48[3]);
 void nextPointFast(PointGeneratorType type, Point *point, int radius, ushort seed48[3]);
 

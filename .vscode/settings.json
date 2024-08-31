@@ -67,6 +67,7 @@
     "chrono": "cpp",
     "forward_list": "cpp",
     "iomanip": "cpp",
-    "ratio": "cpp"
+    "ratio": "cpp",
+    "random": "cpp"
   }
 }

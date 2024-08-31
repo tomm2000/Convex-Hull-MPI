@@ -70,7 +70,7 @@ with open('results/points.bin', 'rb') as points_file:
       min_y = min(min_y, y)
 
       points_read += 1
-      if points_read >= 1_000_000:
+      if points_read >= 10_000_000:
         print("Too many points, breaking")
         break
 

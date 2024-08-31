@@ -47,7 +47,7 @@ $(TARGET): $(OBJS)
 
 # Run the program
 run: $(TARGET)
-	$(TARGET) 
+	$(TARGET) npoints=100000000
 
 mpi: $(TARGET)
 	mpirun -np 6 $(TARGET)

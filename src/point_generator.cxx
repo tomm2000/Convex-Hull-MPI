@@ -13,14 +13,35 @@ void generate_points(
     Point corner2) {
   
   ushort seed48[3] = {seed, seed, seed};
-  // #pragma omp parallel for firstprivate(seed48)
-  // for (size_t i = 0; i < numPoints; i++) {
-  //   points[i] = nextPoint(type, corner1, corner2, seed48);
-  // }
 
   int radius = min(abs(corner1.x - corner2.x), abs(corner1.y - corner2.y)) / 2;
   for (size_t i = 0; i < numPoints; i++) {
     nextPointFast(type, &points[i], radius, seed48);
+  }
+}
+
+void generate_points_parallel(
+    size_t numPoints,
+    Point *points,
+    PointGeneratorType type,
+    ushort seed,
+    Point corner1,
+    Point corner2) {
+  
+  #pragma omp parallel
+  {
+    int tnum = omp_get_thread_num();
+    ushort seed48[3];
+    seed48[0] = seed + tnum * 2124;
+    seed48[1] = seed + tnum * 2124;
+    seed48[2] = seed + tnum * 2124;
+    
+    int radius = min(abs(corner1.x - corner2.x), abs(corner1.y - corner2.y)) / 2;
+
+    #pragma omp for
+    for (size_t i = 0; i < numPoints; i++) {
+      nextPointFast(type, &points[i], radius, seed48);
+    }
   }
 }
 
