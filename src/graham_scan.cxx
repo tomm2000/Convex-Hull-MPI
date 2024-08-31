@@ -13,7 +13,7 @@ void graham_scan(
   Point *points,
   size_t numPoints,
   std::vector<Point> &hull,
-  Timer *timer
+  Timer &timer
 ) {
   // find the bottommost point
   long ymin = points[0].y, min = 0;

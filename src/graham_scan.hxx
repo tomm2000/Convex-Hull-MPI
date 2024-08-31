@@ -13,7 +13,7 @@ void graham_scan(
   Point *points,
   size_t numPoints,
   std::vector<Point> &hull,
-  Timer *timer = nullptr
+  Timer &timer = Timer()
 );
 
 #endif

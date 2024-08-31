@@ -13,7 +13,7 @@
 
 // enum for convex hull algorithm
 enum class ConvexHullAlgorithm {
-  GRAHAM_SCAN,
+  GRAHAM_SCAN, QUICK_HULL
 };
 
 void convex_hull(
@@ -21,7 +21,7 @@ void convex_hull(
   size_t numPoints,
   std::vector<Point> &hull,
   ConvexHullAlgorithm algorithm = ConvexHullAlgorithm::GRAHAM_SCAN,
-  Timer *timer = nullptr
+  Timer &timer = Timer()
 );
 
 void convex_hull_parallel(
@@ -29,7 +29,7 @@ void convex_hull_parallel(
   size_t numPoints,
   std::vector<Point> &hull,
   ConvexHullAlgorithm algorithm = ConvexHullAlgorithm::GRAHAM_SCAN,
-  Timer *timer = nullptr
+  Timer &timer = Timer()
 );
 
 void convex_hull_distributed(
@@ -39,7 +39,7 @@ void convex_hull_distributed(
   size_t numPoints,
   std::vector<Point> &hull,
   ConvexHullAlgorithm algorithm = ConvexHullAlgorithm::GRAHAM_SCAN,
-  Timer *timer = nullptr,
+  Timer &timer = Timer(),
   bool hybrid = false
 );
 
@@ -50,7 +50,7 @@ void convex_hull_predistributed(
   size_t numPoints,
   std::vector<Point> &hull,
   ConvexHullAlgorithm algorithm = ConvexHullAlgorithm::GRAHAM_SCAN,
-  Timer *timer = nullptr,
+  Timer &timer = Timer(),
   bool hybrid = false
 );
 #endif
