@@ -8,8 +8,8 @@
 #include "src/utils.hxx"
 #include "src/point_generator.hxx"
 
-#define PRE_DISTRIBUTED
-// #define CENTRALIZED
+#define CENTRALIZED
+// #define PRE_DISTRIBUTED
 // #define FILE_IO
 
 int main(int argc, char *argv[]) {

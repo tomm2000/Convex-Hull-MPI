@@ -93,6 +93,9 @@ void convex_hull_distributed(
   
   // 1. send the respective points to each process
   if (rank == 0) {
+    MPI_Request amountRequests[numP];
+    MPI_Request pointRequests[numP];
+
     for (int i = 0; i < numP; i++) {
       size_t start = i * numPoints / numP;
       size_t end = (i + 1) * numPoints / numP;
@@ -106,9 +109,14 @@ void convex_hull_distributed(
         localPoints = new Point[localNumPoints];
         localPoints = points + start;
       } else {
-        MPI_Send(&count, 1, MPI_UNSIGNED_LONG_LONG, i, 0, comm);
-        MPI_Send(points + start, count, PointType, i, 0, comm);
+        MPI_Isend(&count, 1, MPI_UNSIGNED_LONG_LONG, i, 0, comm, &amountRequests[i]);
+        MPI_Isend(points + start, count, PointType, i, 0, comm, &pointRequests[i]);
       }
+    }
+
+    for (int i = 1; i < numP; i++) {
+      MPI_Wait(&amountRequests[i], MPI_STATUS_IGNORE);
+      MPI_Wait(&pointRequests[i], MPI_STATUS_IGNORE);
     }
   } else {
     MPI_Recv(&localNumPoints, 1, MPI_UNSIGNED_LONG_LONG, 0, 0, comm, MPI_STATUS_IGNORE);
